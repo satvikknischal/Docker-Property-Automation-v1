@@ -1,0 +1,48 @@
+services:
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: frigate
+    env_file:
+      - ../.env
+    privileged: true # this may not be necessary for all setups
+    restart: unless-stopped
+    stop_grace_period: 30s # allow enough time to shut down the various services
+    shm_size: "512mb" # update for your cameras based on calculation above
+    devices:
+     # - /dev/bus/usb:/dev/bus/usb # Passes the USB Coral, needs to be modified for other versions
+     # - /dev/apex_0:/dev/apex_0 # Passes a PCIe Coral, follow driver instructions here https://coral.ai/docs/m2/get-started/#2a-on-linux
+     # - /dev/video11:/dev/video11 # For Raspberry Pi 4B
+      - ${FRIGATE_HW_ACCEL_DEVICE}:/dev/dri/renderD128 # For intel hwaccel, needs to be updated for your hardware
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config:/config
+      - ${FRIGATE_MEDIA_PATH}:/media/frigate
+      - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000 # 1GB of memory, reduces SSD/SD Card wear
+    expose:
+      - "8971" # Web UI (proxied via Nginx)
+      - "5000" # Internal API
+    ports:
+      # RTSP and WebRTC must be exposed for direct camera connections
+      - "${FRIGATE_RTSP_PORT}:8554" # RTSP feeds
+      - "${FRIGATE_WEBRTC_PORT}:8555/tcp" # WebRTC over tcp
+      - "${FRIGATE_WEBRTC_PORT}:8555/udp" # WebRTC over udp
+    environment:
+      FRIGATE_RTSP_PASSWORD: ${FRIGATE_RTSP_PASSWORD}
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s # Frigate takes longer to start due to model loading
+    labels:
+      - "com.docker.compose.project=frigate"
+      - "com.docker.compose.service=frigate"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true
