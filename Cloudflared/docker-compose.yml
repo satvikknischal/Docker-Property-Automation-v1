@@ -9,7 +9,7 @@ services:
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     # Healthcheck omitted - cloudflared image is minimal (no curl/wget)
     # Monitor tunnel health via Cloudflare Zero Trust dashboard
     labels:
@@ -17,5 +17,5 @@ services:
       - "com.docker.compose.service=cloudflared"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

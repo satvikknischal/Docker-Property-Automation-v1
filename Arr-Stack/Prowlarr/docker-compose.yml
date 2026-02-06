@@ -22,7 +22,7 @@ services:
     expose:
       - "9696" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9696/ping"]
       interval: 30s
@@ -34,5 +34,5 @@ services:
       - "com.docker.compose.service=prowlarr"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

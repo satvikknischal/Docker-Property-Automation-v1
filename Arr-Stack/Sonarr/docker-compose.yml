@@ -27,7 +27,7 @@ services:
     expose:
       - "8989" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8989/ping"]
       interval: 30s
@@ -39,5 +39,5 @@ services:
       - "com.docker.compose.service=sonarr"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

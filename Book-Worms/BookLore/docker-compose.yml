@@ -34,7 +34,7 @@ services:
     expose:
       - "6060" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
       - booklore-internal
     depends_on:
       booklore-db:
@@ -78,7 +78,7 @@ services:
       - "com.docker.compose.service=booklore-db"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true
   booklore-internal:
     driver: bridge

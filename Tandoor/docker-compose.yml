@@ -41,7 +41,7 @@ services:
     expose:
       - "80" # Web UI (proxied via Nginx Proxy Manager)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
       - tandoor-internal
     depends_on:
       tandoor-db:
@@ -86,7 +86,7 @@ volumes:
   tandoor-nginx-config:
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true
   tandoor-internal:
     driver: bridge

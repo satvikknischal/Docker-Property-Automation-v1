@@ -12,14 +12,30 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Script directory (for finding root .env)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/.env"
+
+# Check if .env exists
+if [ ! -f "$ENV_FILE" ]; then
+    echo -e "${RED}Error: .env file not found at $ENV_FILE${NC}"
+    echo "Run ./setup.sh first to create the configuration."
+    exit 1
+fi
+
 echo "============================================"
 echo "Docker Property Automation - Service Manager"
 echo "Command: $COMMAND"
 echo "============================================"
 echo ""
 
-# Find all compose files
-find . -maxdepth 2 \( -name "docker-compose.yml" -o -name "compose.yml" \) | while read compose_file; do
+# Function to run docker compose with env file
+dc() {
+    docker compose --env-file "$ENV_FILE" "$@"
+}
+
+# Find all compose files (including nested directories like Arr-Stack/*)
+find . -maxdepth 3 \( -name "docker-compose.yml" -o -name "compose.yml" \) | sort | while read compose_file; do
     service_dir=$(dirname "$compose_file")
     service_name=$(basename "$service_dir")
     
@@ -33,25 +49,25 @@ find . -maxdepth 2 \( -name "docker-compose.yml" -o -name "compose.yml" \) | whi
     
     case $COMMAND in
         up)
-            docker compose up -d
+            dc up -d
             ;;
         down)
-            docker compose down
+            dc down
             ;;
         restart)
-            docker compose restart
+            dc restart
             ;;
         pull)
-            docker compose pull
+            dc pull
             ;;
         logs)
-            docker compose logs --tail=50 -f
+            dc logs --tail=50
             ;;
         ps)
-            docker compose ps
+            dc ps
             ;;
         status)
-            if docker compose ps | grep -q "Up"; then
+            if dc ps 2>/dev/null | grep -q "Up\|running"; then
                 echo -e "${GREEN}✓ Running${NC}"
             else
                 echo -e "${RED}✗ Not running${NC}"
@@ -64,7 +80,7 @@ find . -maxdepth 2 \( -name "docker-compose.yml" -o -name "compose.yml" \) | whi
             ;;
     esac
     
-    cd - > /dev/null
+    cd "$SCRIPT_DIR"
     echo ""
 done
 

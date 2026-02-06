@@ -32,7 +32,7 @@ services:
     environment:
       FRIGATE_RTSP_PASSWORD: ${FRIGATE_RTSP_PASSWORD}
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/api/version"]
       interval: 30s
@@ -44,5 +44,5 @@ services:
       - "com.docker.compose.service=frigate"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

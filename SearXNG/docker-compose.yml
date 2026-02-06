@@ -7,7 +7,7 @@ services:
     volumes:
       - ./valkey-data:/data
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 30s
@@ -32,7 +32,7 @@ services:
     expose:
       - "8080" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     depends_on:
       - redis
     healthcheck:
@@ -52,5 +52,5 @@ services:
       - SETUID
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

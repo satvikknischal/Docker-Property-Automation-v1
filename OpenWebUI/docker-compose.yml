@@ -17,7 +17,7 @@ services:
     expose:
       - "8080" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
       interval: 30s
@@ -29,5 +29,5 @@ services:
       - "com.docker.compose.service=open-webui"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

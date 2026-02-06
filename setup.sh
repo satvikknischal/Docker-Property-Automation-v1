@@ -154,25 +154,130 @@ check_docker_running() {
 }
 
 # ============================================
+# Function: Generate random password/secret
+# ============================================
+generate_password() {
+    local length=${1:-32}
+    local type=${2:-"hex"}
+    
+    case $type in
+        "hex")
+            openssl rand -hex $length 2>/dev/null || cat /dev/urandom | tr -dc 'a-f0-9' | head -c $((length * 2))
+            ;;
+        "base64")
+            openssl rand -base64 $length 2>/dev/null | tr -d '/+=' | head -c $length
+            ;;
+        "alnum")
+            cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c $length
+            ;;
+    esac
+}
+
+# ============================================
+# Function: Generate all secrets
+# ============================================
+generate_all_secrets() {
+    echo ""
+    echo -e "${BLUE}Generating secure passwords and secrets...${NC}"
+    
+    # VaultWarden Admin Token
+    local VW_TOKEN=$(generate_password 48 base64)
+    sed -i.bak "s|^# VAULTWARDEN_ADMIN_TOKEN=.*|VAULTWARDEN_ADMIN_TOKEN=$VW_TOKEN|" .env
+    sed -i.bak "s|^VAULTWARDEN_ADMIN_TOKEN=.*|VAULTWARDEN_ADMIN_TOKEN=$VW_TOKEN|" .env
+    echo -e "  ${GREEN}✓${NC} VaultWarden Admin Token"
+    
+    # n8n Encryption Key
+    local N8N_KEY=$(generate_password 32 hex)
+    sed -i.bak "s|^# N8N_ENCRYPTION_KEY=.*|N8N_ENCRYPTION_KEY=$N8N_KEY|" .env
+    sed -i.bak "s|^N8N_ENCRYPTION_KEY=.*|N8N_ENCRYPTION_KEY=$N8N_KEY|" .env
+    echo -e "  ${GREEN}✓${NC} n8n Encryption Key"
+    
+    # n8n Basic Auth Password
+    local N8N_AUTH_PASS=$(generate_password 16 alnum)
+    sed -i.bak "s|^N8N_BASIC_AUTH_PASSWORD=.*|N8N_BASIC_AUTH_PASSWORD=$N8N_AUTH_PASS|" .env
+    echo -e "  ${GREEN}✓${NC} n8n Basic Auth Password"
+    
+    # Minecraft RCON Password
+    local MC_RCON=$(generate_password 16 alnum)
+    sed -i.bak "s|^MC_RCON_PASSWORD=.*|MC_RCON_PASSWORD=$MC_RCON|" .env
+    echo -e "  ${GREEN}✓${NC} Minecraft RCON Password"
+    
+    # LiteLLM Keys
+    local LITELLM_MASTER=$(generate_password 32 hex)
+    local LITELLM_SALT=$(generate_password 32 hex)
+    local LITELLM_UI_PASS=$(generate_password 24 alnum)
+    local LITELLM_DB_PASS=$(generate_password 24 alnum)
+    sed -i.bak "s|^LITELLM_MASTER_KEY=.*|LITELLM_MASTER_KEY=$LITELLM_MASTER|" .env
+    sed -i.bak "s|^LITELLM_SALT_KEY=.*|LITELLM_SALT_KEY=$LITELLM_SALT|" .env
+    sed -i.bak "s|^LITELLM_UI_PASSWORD=.*|LITELLM_UI_PASSWORD=$LITELLM_UI_PASS|" .env
+    sed -i.bak "s|^LITELLM_DB_PASSWORD=.*|LITELLM_DB_PASSWORD=$LITELLM_DB_PASS|" .env
+    echo -e "  ${GREEN}✓${NC} LiteLLM Master Key, Salt Key, UI Password, DB Password"
+    
+    # Immich Database Password
+    local IMMICH_DB_PASS=$(generate_password 32 alnum)
+    sed -i.bak "s|^IMMICH_DB_PASSWORD=.*|IMMICH_DB_PASSWORD=$IMMICH_DB_PASS|" .env
+    echo -e "  ${GREEN}✓${NC} Immich Database Password"
+    
+    # BookLore Database Passwords
+    local BOOKLORE_DB_PASS=$(generate_password 24 alnum)
+    local BOOKLORE_ROOT_PASS=$(generate_password 24 alnum)
+    sed -i.bak "s|^BOOKLORE_DB_PASSWORD=.*|BOOKLORE_DB_PASSWORD=$BOOKLORE_DB_PASS|" .env
+    sed -i.bak "s|^BOOKLORE_DB_ROOT_PASSWORD=.*|BOOKLORE_DB_ROOT_PASSWORD=$BOOKLORE_ROOT_PASS|" .env
+    echo -e "  ${GREEN}✓${NC} BookLore Database Passwords"
+    
+    # Tandoor Secrets
+    local TANDOOR_SECRET=$(generate_password 32 hex)
+    local TANDOOR_DB_PASS=$(generate_password 24 alnum)
+    sed -i.bak "s|^TANDOOR_SECRET_KEY=.*|TANDOOR_SECRET_KEY=$TANDOOR_SECRET|" .env
+    sed -i.bak "s|^TANDOOR_DB_PASSWORD=.*|TANDOOR_DB_PASSWORD=$TANDOOR_DB_PASS|" .env
+    echo -e "  ${GREEN}✓${NC} Tandoor Secret Key & Database Password"
+    
+    # Obsidian LiveSync Password
+    local OBSIDIAN_PASS=$(generate_password 24 alnum)
+    sed -i.bak "s|^OBSIDIAN_SYNC_PASSWORD=.*|OBSIDIAN_SYNC_PASSWORD=$OBSIDIAN_PASS|" .env
+    echo -e "  ${GREEN}✓${NC} Obsidian LiveSync Password"
+    
+    # Cleanup backup files
+    rm -f .env.bak
+    
+    echo ""
+    echo -e "${GREEN}✓ Generated secure passwords for all services${NC}"
+    echo ""
+    echo -e "${YELLOW}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${YELLOW}║  ⚠️  IMPORTANT: All passwords are stored in .env               ║${NC}"
+    echo -e "${YELLOW}║     Back up this file securely!                                 ║${NC}"
+    echo -e "${YELLOW}║     You can view generated passwords with: cat .env            ║${NC}"
+    echo -e "${YELLOW}╚════════════════════════════════════════════════════════════════╝${NC}"
+}
+
+# ============================================
 # Function: Create .env file
 # ============================================
 create_env_file() {
-    echo ""
+echo ""
     echo -e "${BLUE}Setting up environment configuration...${NC}"
     
-    # Check if .env already exists
-    if [ -f ".env" ]; then
+    local REGENERATE_SECRETS=false
+
+# Check if .env already exists
+if [ -f ".env" ]; then
         echo -e "${YELLOW}⚠️  .env file already exists!${NC}"
-        read -p "Do you want to overwrite it? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    read -p "Do you want to overwrite it? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             echo "Keeping existing .env file."
+            read -p "Do you want to regenerate secrets/passwords? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                generate_all_secrets
+            fi
             return 0
         fi
-    fi
+        REGENERATE_SECRETS=true
+fi
 
-    # Create .env from example if it doesn't exist
-    if [ ! -f ".env.example" ]; then
+# Create .env from example if it doesn't exist
+if [ ! -f ".env.example" ]; then
         echo -e "${YELLOW}Creating .env.example template...${NC}"
         create_env_template
     fi
@@ -208,6 +313,9 @@ create_env_file() {
         sed -i.bak "s|^VAULTWARDEN_DOMAIN=.*|VAULTWARDEN_DOMAIN=https://keys.$BASE_DOMAIN|" .env
         rm -f .env.bak
     fi
+    
+    # Generate all secrets
+    generate_all_secrets
     
     echo -e "${GREEN}✓ Environment configured${NC}"
 }
@@ -294,7 +402,8 @@ install_app() {
     if [ -d "$app_dir" ]; then
         echo -e "${BLUE}Installing $app_name...${NC}"
         cd "$app_dir"
-        if docker compose up -d; then
+        # Use --env-file to pass root .env for variable substitution in compose files
+        if docker compose --env-file "$SCRIPT_DIR/.env" up -d; then
             echo -e "${GREEN}✓ $app_name installed successfully${NC}"
         else
             echo -e "${RED}✗ Failed to install $app_name${NC}"
@@ -449,11 +558,6 @@ PGID=1000
 # Base directory for all container data (relative to project root)
 DATA_DIR=./data
 
-# ============================================
-# Network Configuration
-# ============================================
-# Docker network name for reverse proxy communication
-PROXY_NETWORK=proxy-network
 
 # ============================================
 # Container Image Versions
@@ -742,7 +846,7 @@ show_completion() {
     echo "  ./manage-all.sh status    - Check all services"
     echo "  ./manage-all.sh logs      - View all logs"
     echo "  docker compose logs -f    - View service logs (in service dir)"
-    echo ""
+echo ""
 }
 
 # ============================================

@@ -20,7 +20,7 @@ services:
       # Wyoming protocol port - exposed for Home Assistant integration
       - "${WHISPER_PORT}:10300"
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:10300"]
       interval: 30s
@@ -32,5 +32,5 @@ services:
       - "com.docker.compose.service=faster-whisper"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

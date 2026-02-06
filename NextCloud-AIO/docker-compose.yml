@@ -36,7 +36,7 @@ services:
       # AIO Admin interface - required for setup and management
       - "${NEXTCLOUD_AIO_PORT}:8080"
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     labels:
       - "com.docker.compose.project=nextcloud-aio"
       - "com.docker.compose.service=nextcloud-aio-mastercontainer"
@@ -46,5 +46,5 @@ volumes:
     name: nextcloud_aio_mastercontainer
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

@@ -27,7 +27,7 @@ services:
     expose:
       - "7878" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7878/ping"]
       interval: 30s
@@ -39,5 +39,5 @@ services:
       - "com.docker.compose.service=radarr"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

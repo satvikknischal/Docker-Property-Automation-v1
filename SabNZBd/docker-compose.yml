@@ -16,7 +16,7 @@ services:
     expose:
       - "8080" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080"]
       interval: 30s
@@ -28,5 +28,5 @@ services:
       - "com.docker.compose.service=sabnzbd"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

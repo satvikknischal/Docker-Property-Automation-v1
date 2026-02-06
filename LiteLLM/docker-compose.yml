@@ -40,7 +40,7 @@ services:
     expose:
       - "4000" # API (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
       - litellm-internal
     depends_on:
       litellm-db:
@@ -80,7 +80,7 @@ services:
       - "com.docker.compose.service=litellm-db"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true
   litellm-internal:
     driver: bridge

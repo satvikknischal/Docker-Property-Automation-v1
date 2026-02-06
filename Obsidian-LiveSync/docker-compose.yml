@@ -24,7 +24,7 @@ services:
     expose:
       - "5984" # CouchDB API (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5984/_up"]
       interval: 30s
@@ -36,5 +36,5 @@ services:
       - "com.docker.compose.service=obsidian-livesync"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

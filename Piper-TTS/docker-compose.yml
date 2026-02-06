@@ -23,7 +23,7 @@ services:
       # Wyoming protocol port - exposed for Home Assistant integration
       - "${PIPER_PORT}:10200"
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:10200"]
       interval: 30s
@@ -35,5 +35,5 @@ services:
       - "com.docker.compose.service=piper-tts"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

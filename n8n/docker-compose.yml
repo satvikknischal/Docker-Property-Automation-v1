@@ -27,7 +27,7 @@ services:
     expose:
       - "5678" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5678/healthz"]
       interval: 30s
@@ -39,5 +39,5 @@ services:
       - "com.docker.compose.service=n8n"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

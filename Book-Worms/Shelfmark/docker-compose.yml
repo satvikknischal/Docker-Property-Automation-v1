@@ -26,7 +26,7 @@ services:
     expose:
       - "8084" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8084"]
       interval: 30s
@@ -38,5 +38,5 @@ services:
       - "com.docker.compose.service=shelfmark"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

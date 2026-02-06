@@ -34,7 +34,7 @@ services:
     expose:
       - "2283" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
       - immich-internal
     depends_on:
       immich-redis:
@@ -132,7 +132,7 @@ services:
       - "com.docker.compose.service=immich-db"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true
   immich-internal:
     driver: bridge

@@ -21,7 +21,7 @@ services:
       - "${QB_TORRENTING_PORT}:6881"
       - "${QB_TORRENTING_PORT}:6881/udp"
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080"]
       interval: 30s
@@ -33,5 +33,5 @@ services:
       - "com.docker.compose.service=qbittorrent"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

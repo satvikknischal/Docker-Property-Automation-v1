@@ -22,7 +22,7 @@ services:
     expose:
       - "5055" # Web UI (proxied via Nginx)
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5055/api/v1/status"]
       interval: 30s
@@ -34,5 +34,5 @@ services:
       - "com.docker.compose.service=overseerr"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true

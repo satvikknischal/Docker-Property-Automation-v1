@@ -23,7 +23,7 @@ services:
       # Port 32400 exposed for local network discovery (Plex apps on smart TVs, etc.)
       - "${PLEX_PORT}:32400"
     networks:
-      - ${PROXY_NETWORK}
+      - proxy-network
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:32400/identity"]
       interval: 30s
@@ -35,5 +35,5 @@ services:
       - "com.docker.compose.service=plex"
 
 networks:
-  ${PROXY_NETWORK}:
+  proxy-network:
     external: true
