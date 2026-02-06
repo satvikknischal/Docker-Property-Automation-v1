@@ -1,0 +1,38 @@
+services:
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:${STIRLINGPDF_VERSION}
+    container_name: stirling-pdf
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - DOCKER_ENABLE_SECURITY=${STIRLING_ENABLE_SECURITY}
+      - SECURITY_ENABLELOGIN=${STIRLING_ENABLE_LOGIN}
+      - SECURITY_INITIALLOGIN_USERNAME=${STIRLING_ADMIN_USERNAME}
+      - SECURITY_INITIALLOGIN_PASSWORD=${STIRLING_ADMIN_PASSWORD}
+      - CSRF_DISABLED=${STIRLING_CSRF_DISABLED}
+      - DEFAULT_LOCALE=${STIRLING_LOCALE}
+      - LANGS=${STIRLING_LANGS}
+      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=${STIRLING_ADVANCED_OPS}
+      - TZ=${TZ}
+    volumes:
+      - ./data:/usr/share/tessdata # OCR language data
+      - ./config:/configs # Custom configurations
+      - ./logs:/logs # Application logs
+    expose:
+      - "8080" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/api/v1/info/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=stirling-pdf"
+      - "com.docker.compose.service=stirling-pdf"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

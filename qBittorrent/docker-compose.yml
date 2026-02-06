@@ -1,0 +1,37 @@
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_VERSION}
+    container_name: qbittorrent
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=${QB_TORRENTING_PORT}
+    volumes:
+      - ./config:/config
+      - ${QB_DOWNLOADS_PATH}:/downloads
+    expose:
+      - "8080" # Web UI (proxied via Nginx)
+    ports:
+      # Torrenting port must be exposed for peer connections
+      - "${QB_TORRENTING_PORT}:6881"
+      - "${QB_TORRENTING_PORT}:6881/udp"
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=qbittorrent"
+      - "com.docker.compose.service=qbittorrent"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

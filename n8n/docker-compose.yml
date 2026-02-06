@@ -1,0 +1,43 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:${N8N_VERSION}
+    container_name: n8n
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - N8N_HOST=${N8N_SUBDOMAIN}.${BASE_DOMAIN}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://${N8N_SUBDOMAIN}.${BASE_DOMAIN}/
+      - GENERIC_TIMEZONE=${TZ}
+      - TZ=${TZ}
+      # Optional: Enable basic auth (set in .env)
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      # Optional: Encryption key for credentials (set in .env)
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+    volumes:
+      - ./data:/home/node/.n8n
+      - ./local-files:/files
+    expose:
+      - "5678" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=n8n"
+      - "com.docker.compose.service=n8n"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

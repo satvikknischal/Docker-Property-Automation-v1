@@ -1,0 +1,86 @@
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:${LITELLM_VERSION}
+    container_name: litellm
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    command:
+      - "--config"
+      - "/app/config.yaml"
+      - "--port"
+      - "4000"
+    environment:
+      # Master key for API authentication (generate with: openssl rand -hex 32)
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      # Salt key for hashing (generate with: openssl rand -hex 32)
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+      # Database for storing keys, spend tracking, etc.
+      DATABASE_URL: postgresql://${LITELLM_DB_USER}:${LITELLM_DB_PASSWORD}@litellm-db:5432/${LITELLM_DB_NAME}
+      STORE_MODEL_IN_DB: "True"
+      # UI Credentials
+      UI_USERNAME: ${LITELLM_UI_USERNAME}
+      UI_PASSWORD: ${LITELLM_UI_PASSWORD}
+      # LLM Provider API Keys (add only the ones you use)
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      AZURE_API_KEY: ${AZURE_API_KEY}
+      AZURE_API_BASE: ${AZURE_API_BASE}
+      COHERE_API_KEY: ${COHERE_API_KEY}
+      REPLICATE_API_TOKEN: ${REPLICATE_API_TOKEN}
+      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY}
+      # For local Ollama
+      OLLAMA_API_BASE: ${OLLAMA_API_BASE}
+      # Timezone
+      TZ: ${TZ}
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./data:/app/data
+    expose:
+      - "4000" # API (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+      - litellm-internal
+    depends_on:
+      litellm-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=litellm"
+      - "com.docker.compose.service=litellm"
+
+  litellm-db:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: litellm-db
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_DB: ${LITELLM_DB_NAME}
+      POSTGRES_USER: ${LITELLM_DB_USER}
+      POSTGRES_PASSWORD: ${LITELLM_DB_PASSWORD}
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - litellm-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LITELLM_DB_USER} -d ${LITELLM_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=litellm"
+      - "com.docker.compose.service=litellm-db"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true
+  litellm-internal:
+    driver: bridge

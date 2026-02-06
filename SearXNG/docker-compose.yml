@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: docker.io/valkey/valkey:${VALKEY_VERSION}
+    container_name: searxng-redis
+    restart: unless-stopped
+    command: valkey-server --save 30 1 --loglevel warning
+    volumes:
+      - ./valkey-data:/data
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.docker.compose.project=searxng"
+      - "com.docker.compose.service=redis"
+
+  searxng:
+    image: docker.io/searxng/searxng:${SEARXNG_VERSION}
+    container_name: searxng
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}
+      - SEARXNG_SECRET=${SEARXNG_SECRET}
+    volumes:
+      - ./config:/etc/searxng:rw
+    expose:
+      - "8080" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=searxng"
+      - "com.docker.compose.service=searxng"
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

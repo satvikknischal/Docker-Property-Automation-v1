@@ -1,0 +1,39 @@
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:${PLEX_VERSION}
+    container_name: plex
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM_TOKEN}
+    devices:
+      - ${PLEX_GPU_DEVICE}:/dev/dri # GPU for hardware transcoding
+      # - /dev/dvb:/dev/dvb # Uncomment for TV tuner support
+    volumes:
+      - ./config:/config
+      - ${PLEX_MEDIA_PATH}:/Media
+    expose:
+      - "32400" # Web UI (proxied via Nginx)
+    ports:
+      # Port 32400 exposed for local network discovery (Plex apps on smart TVs, etc.)
+      - "${PLEX_PORT}:32400"
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:32400/identity"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=plex"
+      - "com.docker.compose.service=plex"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

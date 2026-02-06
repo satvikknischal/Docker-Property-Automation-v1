@@ -1,0 +1,73 @@
+# LiteLLM Proxy Configuration
+# Documentation: https://docs.litellm.ai/docs/proxy/configs
+
+model_list:
+  # OpenAI Models
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4-turbo
+    litellm_params:
+      model: openai/gpt-4-turbo
+      api_key: os.environ/OPENAI_API_KEY
+
+  # Anthropic Models
+  - model_name: claude-3-5-sonnet
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-3-opus
+    litellm_params:
+      model: anthropic/claude-3-opus-20240229
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-3-haiku
+    litellm_params:
+      model: anthropic/claude-3-haiku-20240307
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # Google Models
+  - model_name: gemini-pro
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: os.environ/GOOGLE_API_KEY
+
+  - model_name: gemini-flash
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: os.environ/GOOGLE_API_KEY
+
+  # Local Ollama Models (uncomment if using Ollama)
+  # - model_name: ollama-llama3
+  #   litellm_params:
+  #     model: ollama/llama3
+  #     api_base: os.environ/OLLAMA_API_BASE
+
+  # - model_name: ollama-mistral
+  #   litellm_params:
+  #     model: ollama/mistral
+  #     api_base: os.environ/OLLAMA_API_BASE
+
+litellm_settings:
+  # Enable spend tracking
+  success_callback: ["langfuse"]  # Optional: for analytics
+  # Cache settings
+  cache: false
+  # Logging
+  set_verbose: false
+
+general_settings:
+  # Master key is set via environment variable
+  master_key: os.environ/LITELLM_MASTER_KEY
+  # Database for persistent storage
+  database_url: os.environ/DATABASE_URL
+  # Enable the admin UI
+  enable_ui: true

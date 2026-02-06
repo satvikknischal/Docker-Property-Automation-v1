@@ -1,0 +1,43 @@
+#
+# Sonarr - TV Series Collection Manager
+# Documentation: https://wiki.servarr.com/sonarr
+#
+# Monitors for new TV episodes, downloads via Usenet/Torrent, and organizes library
+# Integrates with Prowlarr for indexers and download clients
+#
+
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:${SONARR_VERSION}
+    container_name: sonarr
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      # Application config and database
+      - ./config:/config
+      # TV series library (can be network share)
+      - ${ARR_TV_PATH}:/tv
+      # Download client downloads (must match download client volume)
+      - ${ARR_DOWNLOADS_PATH}:/downloads
+    expose:
+      - "8989" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=sonarr"
+      - "com.docker.compose.service=sonarr"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

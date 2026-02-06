@@ -1,0 +1,50 @@
+services:
+  nextcloud-aio-mastercontainer:
+    image: nextcloud/all-in-one:${NEXTCLOUD_AIO_VERSION}
+    container_name: nextcloud-aio-mastercontainer
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ../.env
+    environment:
+      # Required: Your Nextcloud domain (must match NPM proxy host)
+      - NEXTCLOUD_DOMAIN=${NEXTCLOUD_DOMAIN}
+      
+      # Reverse Proxy Configuration
+      - APACHE_PORT=11000
+      - APACHE_IP_BINDING=0.0.0.0
+      
+      # Skip domain validation (set to true if using Cloudflare Tunnel)
+      - SKIP_DOMAIN_VALIDATION=${NEXTCLOUD_SKIP_DOMAIN_VALIDATION}
+      
+      # Timezone
+      - TZ=${TZ}
+      
+      # Optional features (yes/no)
+      - COLLABORA_ENABLED=${NEXTCLOUD_COLLABORA_ENABLED}
+      - TALK_ENABLED=${NEXTCLOUD_TALK_ENABLED}
+      - IMAGINARY_ENABLED=${NEXTCLOUD_IMAGINARY_ENABLED}
+      - FULLTEXTSEARCH_ENABLED=${NEXTCLOUD_FULLTEXTSEARCH_ENABLED}
+    volumes:
+      # Required: Docker socket for managing AIO containers
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Persistent data for the mastercontainer
+      - nextcloud_aio_mastercontainer:/mnt/docker-aio-config
+    expose:
+      - "8080" # AIO Admin interface
+    ports:
+      # AIO Admin interface - required for setup and management
+      - "${NEXTCLOUD_AIO_PORT}:8080"
+    networks:
+      - ${PROXY_NETWORK}
+    labels:
+      - "com.docker.compose.project=nextcloud-aio"
+      - "com.docker.compose.service=nextcloud-aio-mastercontainer"
+
+volumes:
+  nextcloud_aio_mastercontainer:
+    name: nextcloud_aio_mastercontainer
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

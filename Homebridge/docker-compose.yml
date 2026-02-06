@@ -1,0 +1,40 @@
+#
+# Homebridge - HomeKit Bridge
+# Documentation: https://github.com/homebridge/homebridge
+#
+# NOTE: network_mode: host is REQUIRED for HomeKit device discovery (mDNS/Bonjour)
+# This service cannot use the proxy-network like other services.
+# Access the UI directly at http://<host-ip>:8581
+#
+
+services:
+  homebridge:
+    image: homebridge/homebridge:${HOMEBRIDGE_VERSION}
+    container_name: homebridge
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ../.env
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      HOMEBRIDGE_CONFIG_UI_PORT: ${HOMEBRIDGE_PORT}
+      # Enable avahi for mDNS (HomeKit discovery)
+      ENABLE_AVAHI: 1
+    volumes:
+      - ./data:/homebridge
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:${HOMEBRIDGE_PORT:-8581}"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    labels:
+      - "com.docker.compose.project=homebridge"
+      - "com.docker.compose.service=homebridge"

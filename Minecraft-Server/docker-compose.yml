@@ -1,0 +1,52 @@
+services:
+  minecraft:
+    image: itzg/minecraft-server:${MINECRAFT_VERSION_TAG}
+    container_name: minecraft
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    env_file:
+      - ../.env
+    environment:
+      # Required
+      EULA: "TRUE"
+      # Server type: VANILLA, PAPER, SPIGOT, BUKKIT, FORGE, FABRIC, etc.
+      TYPE: ${MC_TYPE}
+      VERSION: ${MC_VERSION}
+      # Memory allocation
+      MEMORY: ${MC_MEMORY}
+      # Server settings
+      DIFFICULTY: ${MC_DIFFICULTY}
+      MODE: ${MC_GAMEMODE}
+      MOTD: ${MC_MOTD}
+      MAX_PLAYERS: ${MC_MAX_PLAYERS}
+      PVP: ${MC_PVP}
+      ONLINE_MODE: ${MC_ONLINE_MODE}
+      ALLOW_NETHER: ${MC_ALLOW_NETHER}
+      ENABLE_COMMAND_BLOCK: ${MC_ENABLE_COMMAND_BLOCK}
+      SPAWN_PROTECTION: ${MC_SPAWN_PROTECTION}
+      VIEW_DISTANCE: ${MC_VIEW_DISTANCE}
+      # Whitelist & Ops (comma-separated usernames)
+      WHITELIST: ${MC_WHITELIST}
+      OPS: ${MC_OPS}
+      # RCON (remote console)
+      ENABLE_RCON: ${MC_ENABLE_RCON}
+      RCON_PASSWORD: ${MC_RCON_PASSWORD}
+      RCON_PORT: 25575
+      # Timezone
+      TZ: ${TZ}
+    volumes:
+      - ./data:/data
+    ports:
+      # Minecraft requires direct TCP access - cannot be reverse proxied
+      - "${MC_PORT}:25565"
+      - "${MC_RCON_PORT}:25575"
+    healthcheck:
+      test: ["CMD", "mc-health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    labels:
+      - "com.docker.compose.project=minecraft"
+      - "com.docker.compose.service=minecraft"

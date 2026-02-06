@@ -1,0 +1,32 @@
+services:
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:${SABNZBD_VERSION}
+    container_name: sabnzbd
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./config:/config
+      - ${SABNZBD_DOWNLOADS_PATH}:/downloads
+      - ${SABNZBD_INCOMPLETE_PATH}:/incomplete-downloads
+    expose:
+      - "8080" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=sabnzbd"
+      - "com.docker.compose.service=sabnzbd"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

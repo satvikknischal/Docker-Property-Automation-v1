@@ -1,0 +1,38 @@
+#
+# Overseerr - Media Request Management
+# Documentation: https://docs.overseerr.dev/
+#
+# Request management for Plex with Sonarr/Radarr integration
+# Users can request movies and TV shows through a clean web interface
+#
+
+services:
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:${OVERSEERR_VERSION}
+    container_name: overseerr
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - ./config:/config
+    expose:
+      - "5055" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5055/api/v1/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=overseerr"
+      - "com.docker.compose.service=overseerr"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

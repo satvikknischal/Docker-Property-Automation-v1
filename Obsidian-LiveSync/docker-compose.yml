@@ -1,0 +1,40 @@
+#
+# Obsidian LiveSync - Self-hosted Sync Server
+# Documentation: https://github.com/vrtmrz/obsidian-livesync
+#
+# Uses CouchDB as the sync backend for Obsidian vaults
+# IMPORTANT: You must create local.ini before first run (see below)
+#
+
+services:
+  obsidian-livesync:
+    image: couchdb:${OBSIDIAN_SYNC_VERSION}
+    container_name: obsidian-livesync
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      COUCHDB_USER: ${OBSIDIAN_SYNC_USER}
+      COUCHDB_PASSWORD: ${OBSIDIAN_SYNC_PASSWORD}
+    volumes:
+      # CouchDB data
+      - ./data:/opt/couchdb/data
+      # CouchDB configuration (MUST exist before starting)
+      - ./local.ini:/opt/couchdb/etc/local.ini
+    expose:
+      - "5984" # CouchDB API (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5984/_up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=obsidian-livesync"
+      - "com.docker.compose.service=obsidian-livesync"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

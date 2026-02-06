@@ -1,0 +1,84 @@
+#
+# BookLore - Personal Book Library Manager
+# Documentation: https://github.com/booklore-app/booklore
+#
+# A self-hosted book library application for organizing and managing your ebook collection
+#
+
+services:
+  booklore:
+    image: booklore/booklore:${BOOKLORE_VERSION}
+    container_name: booklore
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      USER_ID: ${PUID}
+      GROUP_ID: ${PGID}
+      TZ: ${TZ}
+      # Database connection (internal MariaDB)
+      DATABASE_URL: jdbc:mariadb://booklore-db:3306/${BOOKLORE_DB_NAME}
+      DATABASE_USERNAME: ${BOOKLORE_DB_USER}
+      DATABASE_PASSWORD: ${BOOKLORE_DB_PASSWORD}
+      # Application settings
+      BOOKLORE_PORT: 6060
+      SWAGGER_ENABLED: ${BOOKLORE_SWAGGER_ENABLED}
+      FORCE_DISABLE_OIDC: ${BOOKLORE_FORCE_DISABLE_OIDC}
+    volumes:
+      # Application data (settings, metadata, cache)
+      - ./data:/app/data
+      # Book library - can be network share
+      - ${BOOKLORE_BOOKS_PATH}:/books
+      # BookDrop - auto-import folder
+      - ./bookdrop:/bookdrop
+    expose:
+      - "6060" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+      - booklore-internal
+    depends_on:
+      booklore-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:6060/api/v1/healthcheck"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=booklore"
+      - "com.docker.compose.service=booklore"
+
+  booklore-db:
+    image: lscr.io/linuxserver/mariadb:${MARIADB_VERSION}
+    container_name: booklore-db
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      MYSQL_ROOT_PASSWORD: ${BOOKLORE_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${BOOKLORE_DB_NAME}
+      MYSQL_USER: ${BOOKLORE_DB_USER}
+      MYSQL_PASSWORD: ${BOOKLORE_DB_PASSWORD}
+    volumes:
+      - ./mariadb-data:/config
+    networks:
+      - booklore-internal
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=booklore"
+      - "com.docker.compose.service=booklore-db"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true
+  booklore-internal:
+    driver: bridge

@@ -1,0 +1,36 @@
+services:
+  faster-whisper:
+    image: lscr.io/linuxserver/faster-whisper:${WHISPER_VERSION}
+    container_name: faster-whisper
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WHISPER_MODEL=${WHISPER_MODEL}
+      - WHISPER_LANG=${WHISPER_LANG}
+      - WHISPER_BEAM=${WHISPER_BEAM}
+    volumes:
+      - ./config:/config
+    expose:
+      - "10300" # Wyoming protocol
+    ports:
+      # Wyoming protocol port - exposed for Home Assistant integration
+      - "${WHISPER_PORT}:10300"
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:10300"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=faster-whisper"
+      - "com.docker.compose.service=faster-whisper"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

@@ -1,0 +1,31 @@
+services:
+  perplexica:
+    image: itzcrazykns1337/perplexica:${PERPLEXICA_VERSION}
+    container_name: perplexica
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - SEARXNG_API_URL=${PERPLEXICA_SEARXNG_URL}
+      - OPENAI_API_KEY=${PERPLEXICA_OPENAI_API_KEY}
+      - OLLAMA_API_URL=${PERPLEXICA_OLLAMA_URL}
+    volumes:
+      - ./data:/home/perplexica/data
+      - ./config.toml:/home/perplexica/config.toml
+    expose:
+      - "3000" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=perplexica"
+      - "com.docker.compose.service=perplexica"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

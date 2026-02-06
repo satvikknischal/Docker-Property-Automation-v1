@@ -1,0 +1,29 @@
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:${HOMARR_VERSION}
+    container_name: homarr
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
+      - TZ=${TZ}
+    volumes:
+      - ./appdata:/appdata
+    expose:
+      - "7575" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:7575"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=homarr"
+      - "com.docker.compose.service=homarr"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

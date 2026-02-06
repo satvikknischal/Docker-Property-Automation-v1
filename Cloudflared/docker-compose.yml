@@ -1,0 +1,21 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:${CLOUDFLARED_VERSION}
+    container_name: cloudflare-tunnel
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
+    networks:
+      - ${PROXY_NETWORK}
+    # Healthcheck omitted - cloudflared image is minimal (no curl/wget)
+    # Monitor tunnel health via Cloudflare Zero Trust dashboard
+    labels:
+      - "com.docker.compose.project=cloudflared"
+      - "com.docker.compose.service=cloudflared"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

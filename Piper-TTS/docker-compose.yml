@@ -1,0 +1,39 @@
+services:
+  piper-tts:
+    image: lscr.io/linuxserver/piper:${PIPER_VERSION}
+    container_name: piper-tts
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - PIPER_VOICE=${PIPER_VOICE}
+      - PIPER_LENGTH=${PIPER_LENGTH}
+      - PIPER_NOISE=${PIPER_NOISE}
+      - PIPER_NOISEW=${PIPER_NOISEW}
+      - PIPER_SPEAKER=${PIPER_SPEAKER}
+      - PIPER_PROCS=${PIPER_PROCS}
+    volumes:
+      - ./config:/config
+    expose:
+      - "10200" # Wyoming protocol
+    ports:
+      # Wyoming protocol port - exposed for Home Assistant integration
+      - "${PIPER_PORT}:10200"
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:10200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=piper-tts"
+      - "com.docker.compose.service=piper-tts"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

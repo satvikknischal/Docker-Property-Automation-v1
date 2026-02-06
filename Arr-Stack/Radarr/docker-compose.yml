@@ -1,0 +1,43 @@
+#
+# Radarr - Movie Collection Manager
+# Documentation: https://wiki.servarr.com/radarr
+#
+# Monitors for new movies, downloads via Usenet/Torrent, and organizes library
+# Integrates with Prowlarr for indexers and download clients
+#
+
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:${RADARR_VERSION}
+    container_name: radarr
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      # Application config and database
+      - ./config:/config
+      # Movie library (can be network share)
+      - ${ARR_MOVIES_PATH}:/movies
+      # Download client downloads (must match download client volume)
+      - ${ARR_DOWNLOADS_PATH}:/downloads
+    expose:
+      - "7878" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7878/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=radarr"
+      - "com.docker.compose.service=radarr"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true

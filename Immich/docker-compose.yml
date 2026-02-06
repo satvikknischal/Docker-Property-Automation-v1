@@ -1,0 +1,138 @@
+#
+# Immich - Self-hosted photo and video management
+# Documentation: https://immich.app/docs
+#
+# IMPORTANT:
+# - UPLOAD_LOCATION can be on network share (mounted on host)
+# - DB_DATA_LOCATION must be LOCAL storage (not network share!)
+#
+
+services:
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION}
+    container_name: immich-server
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    # Hardware acceleration for transcoding (Intel VAAPI)
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - ${IMMICH_UPLOAD_LOCATION}:/usr/src/app/upload
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      TZ: ${TZ}
+      REDIS_HOSTNAME: immich-redis
+      DB_HOSTNAME: immich-db
+      DB_USERNAME: ${IMMICH_DB_USERNAME}
+      DB_PASSWORD: ${IMMICH_DB_PASSWORD}
+      DB_DATABASE_NAME: ${IMMICH_DB_NAME}
+      # Hardware transcoding
+      IMMICH_FFMPEG_HWACCEL: vaapi
+      IMMICH_FFMPEG_DECODE_FLAGS: -hwaccel vaapi -hwaccel_device /dev/dri/renderD128 -hwaccel_output_format vaapi
+      IMMICH_FFMPEG_ENCODE_FLAGS: -c:v h264_vaapi -global_quality 23
+    expose:
+      - "2283" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+      - immich-internal
+    depends_on:
+      immich-redis:
+        condition: service_healthy
+      immich-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2283/api/server/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=immich"
+      - "com.docker.compose.service=immich-server"
+
+  immich-machine-learning:
+    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
+    # Example tag: ${IMMICH_VERSION}-cuda
+    # extends: # uncomment this section for hardware acceleration - see https://docs.immich.app/features/ml-hardware-acceleration
+    #   file: hwaccel.ml.yml
+    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION}-openvino
+    container_name: immich-ml
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    # OpenVINO hardware acceleration (Intel)
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - ./model-cache:/cache
+    environment:
+      TZ: ${TZ}
+      # OpenVINO settings
+      MACHINE_LEARNING_WORKERS: 1
+      MACHINE_LEARNING_WORKER_TIMEOUT: 120
+    networks:
+      - immich-internal
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import requests; requests.get('http://localhost:3003/ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    labels:
+      - "com.docker.compose.project=immich"
+      - "com.docker.compose.service=immich-ml"
+
+  immich-redis:
+    image: docker.io/valkey/valkey:${VALKEY_VERSION}
+    container_name: immich-redis
+    restart: unless-stopped
+    volumes:
+      - ./redis-data:/data
+    networks:
+      - immich-internal
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      - "com.docker.compose.project=immich"
+      - "com.docker.compose.service=immich-redis"
+
+  immich-db:
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    container_name: immich-db
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_USER: ${IMMICH_DB_USERNAME}
+      POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
+      POSTGRES_DB: ${IMMICH_DB_NAME}
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+      # Uncomment if database is on HDD (not SSD)
+      # DB_STORAGE_TYPE: 'HDD'
+    volumes:
+      # CRITICAL: Must be LOCAL storage, not network share!
+      - ${IMMICH_DB_LOCATION}:/var/lib/postgresql/data
+    shm_size: 128mb
+    networks:
+      - immich-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${IMMICH_DB_USERNAME} -d ${IMMICH_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=immich"
+      - "com.docker.compose.service=immich-db"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true
+  immich-internal:
+    driver: bridge

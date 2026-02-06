@@ -1,0 +1,42 @@
+#
+# Shelfmark - Book Download Manager
+# Documentation: https://github.com/calibrain/shelfmark
+#
+# Similar to Radarr/Sonarr but for books - monitors and downloads ebooks
+#
+
+services:
+  shelfmark:
+    image: ghcr.io/calibrain/shelfmark:${SHELFMARK_VERSION}
+    container_name: shelfmark
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      # Book library destination
+      - ${SHELFMARK_BOOKS_PATH}:/books
+      # Application config and database
+      - ./config:/config
+      # Download client path - must match your torrent/usenet client's volume
+      - ${SHELFMARK_DOWNLOADS_PATH}:/downloads
+    expose:
+      - "8084" # Web UI (proxied via Nginx)
+    networks:
+      - ${PROXY_NETWORK}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=shelfmark"
+      - "com.docker.compose.service=shelfmark"
+
+networks:
+  ${PROXY_NETWORK}:
+    external: true
