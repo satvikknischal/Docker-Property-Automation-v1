@@ -19,7 +19,7 @@ cd "$SCRIPT_DIR"
 
 echo -e "${CYAN}"
 echo "============================================"
-echo "Barium - Property Automation - Setup"
+echo "  Barium - Property Automation - Setup"
 echo "============================================"
 echo -e "${NC}"
 
@@ -40,7 +40,7 @@ check_sudo() {
 # ============================================
 check_docker() {
     echo -e "${BLUE}Checking Docker installation...${NC}"
-    
+
     if command -v docker &> /dev/null; then
         DOCKER_VERSION=$(docker --version | cut -d ' ' -f3 | tr -d ',')
         echo -e "${GREEN}✓ Docker is installed (version $DOCKER_VERSION)${NC}"
@@ -59,7 +59,7 @@ check_docker() {
 
 install_docker() {
     echo -e "${BLUE}Installing Docker...${NC}"
-    
+
     # Detect OS
     if [ -f /etc/os-release ]; then
         . /etc/os-release
@@ -68,7 +68,7 @@ install_docker() {
         echo -e "${RED}Cannot detect OS. Please install Docker manually.${NC}"
         exit 1
     fi
-    
+
     case $OS in
         ubuntu|debian)
             echo "Installing Docker on $OS..."
@@ -98,7 +98,7 @@ install_docker() {
             exit 1
             ;;
     esac
-    
+
     # Add current user to docker group
     if [ "$EUID" -ne 0 ]; then
         $SUDO usermod -aG docker $USER
@@ -106,7 +106,7 @@ install_docker() {
         echo -e "${YELLOW}   Please log out and back in, then run this script again.${NC}"
         exit 0
     fi
-    
+
     echo -e "${GREEN}✓ Docker installed successfully${NC}"
 }
 
@@ -115,7 +115,7 @@ install_docker() {
 # ============================================
 check_docker_compose() {
     echo -e "${BLUE}Checking Docker Compose...${NC}"
-    
+
     if docker compose version &> /dev/null; then
         COMPOSE_VERSION=$(docker compose version --short)
         echo -e "${GREEN}✓ Docker Compose is installed (version $COMPOSE_VERSION)${NC}"
@@ -137,7 +137,7 @@ check_docker_compose() {
 # ============================================
 check_docker_running() {
     echo -e "${BLUE}Checking Docker daemon...${NC}"
-    
+
     if docker info &> /dev/null; then
         echo -e "${GREEN}✓ Docker daemon is running${NC}"
     else
@@ -154,184 +154,93 @@ check_docker_running() {
 }
 
 # ============================================
-# Function: Generate random password/secret
-# ============================================
-generate_password() {
-    local length=${1:-32}
-    local type=${2:-"hex"}
-    
-    case $type in
-        "hex")
-            openssl rand -hex $length 2>/dev/null || cat /dev/urandom | tr -dc 'a-f0-9' | head -c $((length * 2))
-            ;;
-        "base64")
-            openssl rand -base64 $length 2>/dev/null | tr -d '/+=' | head -c $length
-            ;;
-        "alnum")
-            cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c $length
-            ;;
-    esac
-}
-
-# ============================================
-# Function: Generate all secrets
-# ============================================
-generate_all_secrets() {
-    echo ""
-    echo -e "${BLUE}Generating secure passwords and secrets...${NC}"
-    
-    # VaultWarden Admin Token
-    local VW_TOKEN=$(generate_password 48 base64)
-    sed -i.bak "s|^# VAULTWARDEN_ADMIN_TOKEN=.*|VAULTWARDEN_ADMIN_TOKEN=$VW_TOKEN|" .env
-    sed -i.bak "s|^VAULTWARDEN_ADMIN_TOKEN=.*|VAULTWARDEN_ADMIN_TOKEN=$VW_TOKEN|" .env
-    echo -e "  ${GREEN}✓${NC} VaultWarden Admin Token"
-    
-    # n8n Encryption Key
-    local N8N_KEY=$(generate_password 32 hex)
-    sed -i.bak "s|^# N8N_ENCRYPTION_KEY=.*|N8N_ENCRYPTION_KEY=$N8N_KEY|" .env
-    sed -i.bak "s|^N8N_ENCRYPTION_KEY=.*|N8N_ENCRYPTION_KEY=$N8N_KEY|" .env
-    echo -e "  ${GREEN}✓${NC} n8n Encryption Key"
-    
-    # n8n Basic Auth Password
-    local N8N_AUTH_PASS=$(generate_password 16 alnum)
-    sed -i.bak "s|^N8N_BASIC_AUTH_PASSWORD=.*|N8N_BASIC_AUTH_PASSWORD=$N8N_AUTH_PASS|" .env
-    echo -e "  ${GREEN}✓${NC} n8n Basic Auth Password"
-    
-    # Minecraft RCON Password
-    local MC_RCON=$(generate_password 16 alnum)
-    sed -i.bak "s|^MC_RCON_PASSWORD=.*|MC_RCON_PASSWORD=$MC_RCON|" .env
-    echo -e "  ${GREEN}✓${NC} Minecraft RCON Password"
-    
-    # LiteLLM Keys
-    local LITELLM_MASTER=$(generate_password 32 hex)
-    local LITELLM_SALT=$(generate_password 32 hex)
-    local LITELLM_UI_PASS=$(generate_password 24 alnum)
-    local LITELLM_DB_PASS=$(generate_password 24 alnum)
-    sed -i.bak "s|^LITELLM_MASTER_KEY=.*|LITELLM_MASTER_KEY=$LITELLM_MASTER|" .env
-    sed -i.bak "s|^LITELLM_SALT_KEY=.*|LITELLM_SALT_KEY=$LITELLM_SALT|" .env
-    sed -i.bak "s|^LITELLM_UI_PASSWORD=.*|LITELLM_UI_PASSWORD=$LITELLM_UI_PASS|" .env
-    sed -i.bak "s|^LITELLM_DB_PASSWORD=.*|LITELLM_DB_PASSWORD=$LITELLM_DB_PASS|" .env
-    echo -e "  ${GREEN}✓${NC} LiteLLM Master Key, Salt Key, UI Password, DB Password"
-    
-    # Immich Database Password
-    local IMMICH_DB_PASS=$(generate_password 32 alnum)
-    sed -i.bak "s|^IMMICH_DB_PASSWORD=.*|IMMICH_DB_PASSWORD=$IMMICH_DB_PASS|" .env
-    echo -e "  ${GREEN}✓${NC} Immich Database Password"
-    
-    # BookLore Database Passwords
-    local BOOKLORE_DB_PASS=$(generate_password 24 alnum)
-    local BOOKLORE_ROOT_PASS=$(generate_password 24 alnum)
-    sed -i.bak "s|^BOOKLORE_DB_PASSWORD=.*|BOOKLORE_DB_PASSWORD=$BOOKLORE_DB_PASS|" .env
-    sed -i.bak "s|^BOOKLORE_DB_ROOT_PASSWORD=.*|BOOKLORE_DB_ROOT_PASSWORD=$BOOKLORE_ROOT_PASS|" .env
-    echo -e "  ${GREEN}✓${NC} BookLore Database Passwords"
-    
-    # Tandoor Secrets
-    local TANDOOR_SECRET=$(generate_password 32 hex)
-    local TANDOOR_DB_PASS=$(generate_password 24 alnum)
-    sed -i.bak "s|^TANDOOR_SECRET_KEY=.*|TANDOOR_SECRET_KEY=$TANDOOR_SECRET|" .env
-    sed -i.bak "s|^TANDOOR_DB_PASSWORD=.*|TANDOOR_DB_PASSWORD=$TANDOOR_DB_PASS|" .env
-    echo -e "  ${GREEN}✓${NC} Tandoor Secret Key & Database Password"
-    
-    # Obsidian LiveSync Password
-    local OBSIDIAN_PASS=$(generate_password 24 alnum)
-    sed -i.bak "s|^OBSIDIAN_SYNC_PASSWORD=.*|OBSIDIAN_SYNC_PASSWORD=$OBSIDIAN_PASS|" .env
-    echo -e "  ${GREEN}✓${NC} Obsidian LiveSync Password"
-    
-    # Cleanup backup files
-    rm -f .env.bak
-    
-    echo ""
-    echo -e "${GREEN}✓ Generated secure passwords for all services${NC}"
-    echo ""
-    echo -e "${YELLOW}╔════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${YELLOW}║  ⚠️  IMPORTANT: All passwords are stored in .env               ║${NC}"
-    echo -e "${YELLOW}║     Back up this file securely!                                 ║${NC}"
-    echo -e "${YELLOW}║     You can view generated passwords with: cat .env            ║${NC}"
-    echo -e "${YELLOW}╚════════════════════════════════════════════════════════════════╝${NC}"
-}
-
-# ============================================
-# Function: Create .env file
-# ============================================
-create_env_file() {
-echo ""
-    echo -e "${BLUE}Setting up environment configuration...${NC}"
-    
-    local REGENERATE_SECRETS=false
-
-# Check if .env already exists
-if [ -f ".env" ]; then
-        echo -e "${YELLOW}⚠️  .env file already exists!${NC}"
-    read -p "Do you want to overwrite it? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Keeping existing .env file."
-            read -p "Do you want to regenerate secrets/passwords? (y/N): " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                generate_all_secrets
-            fi
-            return 0
-        fi
-        REGENERATE_SECRETS=true
-fi
-
-# Create .env from example if it doesn't exist
-if [ ! -f ".env.example" ]; then
-        echo -e "${YELLOW}Creating .env.example template...${NC}"
-        create_env_template
-    fi
-
-    # Copy .env.example to .env
-    cp .env.example .env
-    echo -e "${GREEN}✓ Created .env file from .env.example${NC}"
-
-    # Get user IDs
-    echo ""
-    echo "Detecting user IDs..."
-    PUID=$(id -u)
-    PGID=$(id -g)
-    echo "Found PUID=$PUID, PGID=$PGID"
-
-    # Update .env with detected values
-    sed -i.bak "s/^PUID=.*/PUID=$PUID/" .env
-    sed -i.bak "s/^PGID=.*/PGID=$PGID/" .env
-    rm -f .env.bak
-
-    # Get timezone
-    echo ""
-    read -p "Enter your timezone (e.g., America/New_York, UTC) [UTC]: " TZ_INPUT
-    TZ_INPUT=${TZ_INPUT:-UTC}
-    sed -i.bak "s/^TZ=.*/TZ=$TZ_INPUT/" .env
-    rm -f .env.bak
-
-    # Get domain
-    echo ""
-    read -p "Enter your base domain (e.g., example.com): " BASE_DOMAIN
-    if [ ! -z "$BASE_DOMAIN" ]; then
-        sed -i.bak "s/^BASE_DOMAIN=.*/BASE_DOMAIN=$BASE_DOMAIN/" .env
-        sed -i.bak "s|^VAULTWARDEN_DOMAIN=.*|VAULTWARDEN_DOMAIN=https://keys.$BASE_DOMAIN|" .env
-        rm -f .env.bak
-    fi
-    
-    # Generate all secrets
-    generate_all_secrets
-    
-    echo -e "${GREEN}✓ Environment configured${NC}"
-}
-
-# ============================================
 # Function: Create Docker network
 # ============================================
 create_docker_network() {
     echo ""
     echo -e "${BLUE}Setting up Docker network...${NC}"
-    
+
     if docker network inspect proxy-network >/dev/null 2>&1; then
         echo -e "${GREEN}✓ Network 'proxy-network' already exists${NC}"
     else
         docker network create proxy-network
         echo -e "${GREEN}✓ Created network 'proxy-network'${NC}"
+    fi
+}
+
+# ============================================
+# Function: Check .env file
+# ============================================
+check_env_file() {
+    echo ""
+    echo -e "${CYAN}============================================${NC}"
+    echo -e "${CYAN}  Environment Configuration${NC}"
+    echo -e "${CYAN}============================================${NC}"
+    echo ""
+
+    if [ ! -f ".env" ]; then
+        echo -e "${YELLOW}No .env file found.${NC}"
+        echo ""
+        read -p "Have you already configured your .env file? (y/N): " -n 1 -r
+        echo
+
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${RED}✗ .env file not found. Cannot proceed.${NC}"
+            echo -e "${YELLOW}  Please copy and configure it first:${NC}"
+            echo "    cp .env.example .env"
+            echo "    nano .env"
+            exit 1
+        else
+            # Copy .env.example to .env
+            if [ -f ".env.example" ]; then
+                cp .env.example .env
+                echo -e "${GREEN}✓ Created .env from .env.example${NC}"
+            else
+                echo -e "${RED}✗ .env.example not found! Repository may be incomplete.${NC}"
+                exit 1
+            fi
+
+            echo ""
+            echo -e "${YELLOW}╔════════════════════════════════════════════════════════════════╗${NC}"
+            echo -e "${YELLOW}║  The .env file has been created from .env.example.             ║${NC}"
+            echo -e "${YELLOW}║                                                                ║${NC}"
+            echo -e "${YELLOW}║  Please edit the .env file and configure:                      ║${NC}"
+            echo -e "${YELLOW}║    • Your domain (BASE_DOMAIN)                                 ║${NC}"
+            echo -e "${YELLOW}║    • Timezone (TZ)                                             ║${NC}"
+            echo -e "${YELLOW}║    • User IDs (PUID/PGID) — run: id \$USER                     ║${NC}"
+            echo -e "${YELLOW}║    • Passwords and secrets (see comments for generation cmds)  ║${NC}"
+            echo -e "${YELLOW}║    • Storage paths for media, books, downloads, etc.           ║${NC}"
+            echo -e "${YELLOW}║    • API keys for any LLM providers you use                    ║${NC}"
+            echo -e "${YELLOW}║                                                                ║${NC}"
+            echo -e "${YELLOW}║  Then run this script again to install your containers.        ║${NC}"
+            echo -e "${YELLOW}╚════════════════════════════════════════════════════════════════╝${NC}"
+            echo ""
+            echo -e "${CYAN}  Edit with:  nano .env${NC}"
+            echo ""
+            exit 0
+        fi
+    else
+        # .env exists — ask if it's been configured
+        echo -e "${GREEN}✓ .env file found${NC}"
+        echo ""
+        read -p "Have you configured the .env file with your settings? (Y/n): " -n 1 -r
+        echo
+
+        if [[ $REPLY =~ ^[Nn]$ ]]; then
+            echo ""
+            echo -e "${YELLOW}Please edit the .env file before continuing:${NC}"
+            echo "    nano .env"
+            echo ""
+            echo -e "${YELLOW}Key items to configure:${NC}"
+            echo "    • BASE_DOMAIN, TZ, PUID/PGID"
+            echo "    • Passwords and secrets"
+            echo "    • Storage paths"
+            echo ""
+            echo "Run this script again when you're done."
+            exit 0
+        fi
+
+        echo -e "${GREEN}✓ .env file configured${NC}"
     fi
 }
 
@@ -387,9 +296,117 @@ display_app_menu() {
     echo " 28) NTP Server             - Time server"
     echo ""
     echo -e "${GREEN}  A) Install ALL applications${NC}"
-    echo -e "${BLUE}  S) Skip - Configure .env only${NC}"
     echo -e "${RED}  Q) Quit${NC}"
     echo ""
+}
+
+# ============================================
+# Function: Pre-create bind mount directories
+# ============================================
+# Docker auto-creates missing bind mount dirs as root,
+# which causes permission issues. This creates them
+# as the current user before docker compose runs.
+prepare_service_dirs() {
+    local app_dir=$1
+
+    case "$app_dir" in
+        "Nginx-Proxy-Manager")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            mkdir -p "$SCRIPT_DIR/$app_dir/letsencrypt"
+            ;;
+        "Portainer")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            ;;
+        "Uptime-Kuma")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            ;;
+        "Plex")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "Frigate")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "Arr-Stack/Prowlarr")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "Arr-Stack/Radarr")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "Arr-Stack/Sonarr")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "Arr-Stack/Overseerr")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "qBittorrent")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "SabNZBd")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "OpenWebUI")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            ;;
+        "LiteLLM")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            mkdir -p "$SCRIPT_DIR/$app_dir/postgres-data"
+            ;;
+        "Perplexica")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            ;;
+        "SearXNG")
+            mkdir -p "$SCRIPT_DIR/$app_dir/searxng"
+            mkdir -p "$SCRIPT_DIR/$app_dir/searxng-data"
+            mkdir -p "$SCRIPT_DIR/$app_dir/valkey-data"
+            ;;
+        "VaultWarden")
+            mkdir -p "$SCRIPT_DIR/$app_dir/vw-data"
+            ;;
+        "n8n")
+            mkdir -p "$SCRIPT_DIR/$app_dir/n8n_data"
+            mkdir -p "$SCRIPT_DIR/$app_dir/local-files"
+            ;;
+        "StirlingPDF")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            mkdir -p "$SCRIPT_DIR/$app_dir/logs"
+            ;;
+        "Homarr")
+            mkdir -p "$SCRIPT_DIR/$app_dir/appdata"
+            ;;
+        "Homebridge")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            ;;
+        "Immich")
+            mkdir -p "$SCRIPT_DIR/$app_dir/model-cache"
+            mkdir -p "$SCRIPT_DIR/$app_dir/redis-data"
+            ;;
+        "Tandoor")
+            mkdir -p "$SCRIPT_DIR/$app_dir/tandoor-staticfiles"
+            mkdir -p "$SCRIPT_DIR/$app_dir/mediafiles"
+            mkdir -p "$SCRIPT_DIR/$app_dir/postgres-data"
+            ;;
+        "Book-Worms/BookLore")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            mkdir -p "$SCRIPT_DIR/$app_dir/bookdrop"
+            mkdir -p "$SCRIPT_DIR/$app_dir/mariadb-data"
+            ;;
+        "Book-Worms/Shelfmark")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "Obsidian-LiveSync")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            ;;
+        "Minecraft-Server")
+            mkdir -p "$SCRIPT_DIR/$app_dir/data"
+            ;;
+        "Whisper-STT")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "Piper-TTS")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+    esac
 }
 
 # ============================================
@@ -398,9 +415,11 @@ display_app_menu() {
 install_app() {
     local app_dir=$1
     local app_name=$2
-    
+
     if [ -d "$app_dir" ]; then
         echo -e "${BLUE}Installing $app_name...${NC}"
+        # Pre-create bind mount directories as current user (safety net)
+        prepare_service_dirs "$app_dir"
         cd "$app_dir"
         # Use --env-file to pass root .env for variable substitution in compose files
         if docker compose --env-file "$SCRIPT_DIR/.env" up -d; then
@@ -419,7 +438,7 @@ install_app() {
 # ============================================
 process_selection() {
     local selection=$1
-    
+
     case $selection in
         1) install_app "Nginx-Proxy-Manager" "Nginx Proxy Manager" ;;
         2) install_app "Portainer" "Portainer" ;;
@@ -427,7 +446,7 @@ process_selection() {
         4) install_app "Uptime-Kuma" "Uptime Kuma" ;;
         5) install_app "Plex" "Plex" ;;
         6) install_app "Frigate" "Frigate" ;;
-        7) 
+        7)
             install_app "Arr-Stack/Prowlarr" "Prowlarr"
             install_app "Arr-Stack/Radarr" "Radarr"
             install_app "Arr-Stack/Sonarr" "Sonarr"
@@ -468,16 +487,16 @@ install_all_apps() {
     echo -e "${CYAN}Installing all applications...${NC}"
     echo -e "${YELLOW}This may take a while...${NC}"
     echo ""
-    
+
     # Infrastructure first
     install_app "Nginx-Proxy-Manager" "Nginx Proxy Manager"
     install_app "Portainer" "Portainer"
-    
+
     # Then other services
     for i in {3..28}; do
         process_selection $i
     done
-    
+
     echo ""
     echo -e "${GREEN}✓ All applications installed${NC}"
 }
@@ -488,22 +507,18 @@ install_all_apps() {
 select_applications() {
     while true; do
         display_app_menu
-        read -p "Enter your choices (comma-separated, e.g., 1,5,16) or A/S/Q: " choices
-        
+        read -p "Enter your choices (comma-separated, e.g., 1,5,16) or A/Q: " choices
+
         # Convert to uppercase for single letter commands
         choices_upper=$(echo "$choices" | tr '[:lower:]' '[:upper:]')
-        
+
         case $choices_upper in
             A)
                 install_all_apps
                 break
                 ;;
-            S)
-                echo -e "${BLUE}Skipping application installation.${NC}"
-                break
-                ;;
             Q)
-                echo -e "${YELLOW}Setup cancelled.${NC}"
+                echo -e "${YELLOW}Exiting.${NC}"
                 exit 0
                 ;;
             *)
@@ -518,7 +533,7 @@ select_applications() {
                         echo -e "${RED}Invalid input: $selection${NC}"
                     fi
                 done
-                
+
                 echo ""
                 read -p "Install more applications? (y/N): " -n 1 -r
                 echo
@@ -531,302 +546,6 @@ select_applications() {
 }
 
 # ============================================
-# Function: Create .env.example template
-# ============================================
-create_env_template() {
-    cat > .env.example << 'EOF'
-# ============================================
-# Docker Property Automation - Configuration
-# ============================================
-# Copy this file to .env and customize for your server
-# cp .env.example .env
-# ============================================
-
-# ============================================
-# Server Configuration
-# ============================================
-# Your server's base domain (e.g., example.com)
-BASE_DOMAIN=subdomain.barium.services
-
-# Timezone (e.g., America/New_York, Europe/London, UTC)
-TZ=UTC
-
-# User IDs for file permissions (run: id $USER to get these)
-PUID=1000
-PGID=1000
-
-# Base directory for all container data (relative to project root)
-DATA_DIR=./data
-
-
-# ============================================
-# Container Image Versions
-# ============================================
-# Pin versions for stability, or use 'latest' for auto-updates
-# Update these when you want to upgrade services
-
-# Infrastructure
-NPM_VERSION=latest
-PORTAINER_VERSION=lts
-CLOUDFLARED_VERSION=latest
-NTP_VERSION=latest
-
-# Media & Entertainment
-PLEX_VERSION=latest
-FRIGATE_VERSION=stable
-JELLYFIN_VERSION=latest
-
-# Arr-Stack
-PROWLARR_VERSION=latest
-RADARR_VERSION=latest
-SONARR_VERSION=latest
-OVERSEERR_VERSION=latest
-
-# Download Clients
-QBITTORRENT_VERSION=latest
-SABNZBD_VERSION=4.5.5
-
-# AI & LLM
-OPENWEBUI_VERSION=git-2b26355
-LITELLM_VERSION=v1.81.0-stable
-PERPLEXICA_VERSION=latest
-
-# Productivity
-N8N_VERSION=latest
-VAULTWARDEN_VERSION=latest
-NEXTCLOUD_AIO_VERSION=latest
-STIRLINGPDF_VERSION=latest
-
-# Home & Utility
-HOMEBRIDGE_VERSION=v1.11.1
-HOMARR_VERSION=v1.51.0
-UPTIME_KUMA_VERSION=2.0.2
-TANDOOR_VERSION=latest
-
-# Voice & TTS
-WHISPER_VERSION=latest
-PIPER_VERSION=2.1.2
-
-# Search
-SEARXNG_VERSION=latest
-
-# Books
-BOOKLORE_VERSION=latest
-SHELFMARK_VERSION=latest
-
-# Sync
-OBSIDIAN_SYNC_VERSION=3
-MINECRAFT_VERSION_TAG=java25
-
-# Databases (internal use)
-POSTGRES_VERSION=16-alpine
-VALKEY_VERSION=8-alpine
-MARIADB_VERSION=latest
-
-# ============================================
-# Nginx Proxy Manager
-# ============================================
-# Ports (leave as default unless you have conflicts)
-NPM_HTTP_PORT=80
-NPM_ADMIN_PORT=81
-NPM_HTTPS_PORT=443
-
-# ============================================
-# VaultWarden Configuration
-# ============================================
-# Full domain URL for VaultWarden
-VAULTWARDEN_DOMAIN=https://keys.${BASE_DOMAIN}
-
-# Local port binding (127.0.0.1:PORT:80)
-VAULTWARDEN_PORT=5100
-
-# Admin token (generate with: openssl rand -base64 48)
-# VAULTWARDEN_ADMIN_TOKEN=
-
-# Signup settings
-VAULTWARDEN_SIGNUPS_ALLOWED=true
-VAULTWARDEN_INVITATIONS_ALLOWED=true
-
-# ============================================
-# n8n Workflow Automation
-# ============================================
-# Subdomain for n8n (will be: subdomain.BASE_DOMAIN)
-N8N_SUBDOMAIN=n8n
-
-# Optional: Enable basic authentication
-N8N_BASIC_AUTH_ACTIVE=false
-N8N_BASIC_AUTH_USER=
-N8N_BASIC_AUTH_PASSWORD=
-
-# Encryption key for credentials storage (generate with: openssl rand -hex 32)
-# IMPORTANT: Back this up! If lost, you cannot decrypt stored credentials
-# N8N_ENCRYPTION_KEY=
-
-# ============================================
-# Minecraft Server
-# ============================================
-# Server type: VANILLA, PAPER, SPIGOT, BUKKIT, FORGE, FABRIC
-MC_TYPE=PAPER
-MC_VERSION=LATEST
-MC_MEMORY=2G
-
-# Game settings
-MC_DIFFICULTY=normal
-MC_GAMEMODE=survival
-MC_MOTD=A Minecraft Server
-MC_MAX_PLAYERS=20
-MC_PVP=true
-MC_ONLINE_MODE=true
-MC_ALLOW_NETHER=true
-MC_ENABLE_COMMAND_BLOCK=false
-MC_SPAWN_PROTECTION=16
-MC_VIEW_DISTANCE=10
-
-# Whitelist & Ops (comma-separated usernames)
-MC_WHITELIST=
-MC_OPS=
-
-# RCON (remote console) - change password!
-MC_ENABLE_RCON=true
-MC_RCON_PASSWORD=changeme
-
-# Ports
-MC_PORT=25565
-MC_RCON_PORT=25575
-
-# ============================================
-# LiteLLM Configuration
-# ============================================
-# Master key for API authentication (generate with: openssl rand -hex 32)
-LITELLM_MASTER_KEY=
-# Salt key for hashing (generate with: openssl rand -hex 32)
-LITELLM_SALT_KEY=
-
-# UI Credentials
-LITELLM_UI_USERNAME=admin
-LITELLM_UI_PASSWORD=
-
-# Database (internal PostgreSQL)
-LITELLM_DB_NAME=litellm
-LITELLM_DB_USER=litellm
-LITELLM_DB_PASSWORD=
-
-# ============================================
-# LLM Provider API Keys
-# ============================================
-# Add only the keys for providers you use
-
-# OpenAI
-OPENAI_API_KEY=
-
-# Anthropic (Claude)
-ANTHROPIC_API_KEY=
-
-# Google (Gemini)
-GOOGLE_API_KEY=
-
-# Azure OpenAI
-AZURE_API_KEY=
-AZURE_API_BASE=
-
-# Cohere
-COHERE_API_KEY=
-
-# Replicate
-REPLICATE_API_TOKEN=
-
-# Hugging Face
-HUGGINGFACE_API_KEY=
-
-# Local Ollama (if running on host)
-OLLAMA_API_BASE=http://host.docker.internal:11434
-
-# ============================================
-# Immich - Photo & Video Management
-# ============================================
-# Version (use 'release' for latest stable, or pin like 'v1.123.0')
-IMMICH_VERSION=release
-
-# Storage locations
-# Upload location - can be network share mounted on host
-IMMICH_UPLOAD_LOCATION=/path/to/your/photos
-
-# Database location - MUST be local storage, NOT network share!
-IMMICH_DB_LOCATION=./Immich/postgres-data
-
-# Database credentials (generate password with: openssl rand -base64 32)
-IMMICH_DB_USERNAME=immich
-IMMICH_DB_PASSWORD=
-IMMICH_DB_NAME=immich
-
-# ============================================
-# Homebridge - HomeKit Bridge
-# ============================================
-# Web UI port (access at http://<host-ip>:PORT)
-# NOTE: Homebridge uses host networking for HomeKit discovery
-HOMEBRIDGE_PORT=8581
-
-# ============================================
-# Shelfmark - Book Download Manager
-# ============================================
-# Path to your book library (can be network share)
-SHELFMARK_BOOKS_PATH=/path/to/books
-
-# Download client path (must match your torrent/usenet client volume)
-SHELFMARK_DOWNLOADS_PATH=/path/to/downloads
-
-# ============================================
-# BookLore - Book Library Manager
-# ============================================
-# Path to your book library (can be network share)
-BOOKLORE_BOOKS_PATH=/path/to/books
-
-# Database credentials (generate passwords with: openssl rand -base64 24)
-BOOKLORE_DB_NAME=booklore
-BOOKLORE_DB_USER=booklore
-BOOKLORE_DB_PASSWORD=
-BOOKLORE_DB_ROOT_PASSWORD=
-
-# Application settings
-BOOKLORE_SWAGGER_ENABLED=false
-BOOKLORE_FORCE_DISABLE_OIDC=false
-
-# ============================================
-# Tandoor Recipes - Recipe Manager
-# ============================================
-# Secret key for Django (generate with: openssl rand -hex 32)
-TANDOOR_SECRET_KEY=
-
-# Database credentials (generate password with: openssl rand -base64 24)
-TANDOOR_DB_NAME=tandoor
-TANDOOR_DB_USER=tandoor
-TANDOOR_DB_PASSWORD=
-
-# Application settings
-# Set to 0 after creating your account to disable public registration
-TANDOOR_ENABLE_SIGNUP=1
-
-# ============================================
-# Arr-Stack (Radarr, Sonarr, etc.)
-# ============================================
-# Media library paths (can be network shares)
-ARR_MOVIES_PATH=/path/to/movies
-ARR_TV_PATH=/path/to/tv
-
-# Download client path (must match your torrent/usenet client volume)
-ARR_DOWNLOADS_PATH=/path/to/downloads
-
-# ============================================
-# Obsidian LiveSync
-# ============================================
-# CouchDB credentials for Obsidian sync
-# Use a strong password - this protects your notes!
-OBSIDIAN_SYNC_USER=obsidian
-OBSIDIAN_SYNC_PASSWORD=
-EOF
-}
-
-# ============================================
 # Function: Show completion message
 # ============================================
 show_completion() {
@@ -836,17 +555,15 @@ show_completion() {
     echo -e "${GREEN}============================================${NC}"
     echo ""
     echo -e "${CYAN}Next steps:${NC}"
-    echo "  1. Review and edit .env file: nano .env"
-    echo "  2. Generate required secrets (use openssl commands in .env)"
-    echo "  3. Configure Nginx Proxy Manager at http://your-ip:81"
+    echo "  1. Configure Nginx Proxy Manager at http://your-ip:81"
     echo "     Default login: admin@example.com / changeme"
-    echo "  4. Add proxy hosts for your services"
+    echo "  2. Add proxy hosts for your services"
     echo ""
     echo -e "${CYAN}Useful commands:${NC}"
     echo "  ./manage-all.sh status    - Check all services"
     echo "  ./manage-all.sh logs      - View all logs"
     echo "  docker compose logs -f    - View service logs (in service dir)"
-echo ""
+    echo ""
 }
 
 # ============================================
@@ -866,23 +583,18 @@ check_docker_compose
 # Step 3: Check Docker is running
 check_docker_running
 
-# Step 4: Create/update .env file
-create_env_file
+# Step 4: Check .env file is configured
+check_env_file
 
 # Step 5: Create Docker network
 create_docker_network
 
-# Step 6: Ask about application installation
+# Step 6: Select and install applications
 echo ""
 echo -e "${CYAN}============================================${NC}"
 echo -e "${CYAN}  Application Installation${NC}"
 echo -e "${CYAN}============================================${NC}"
-echo ""
-read -p "Do you want to install applications now? (Y/n): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    select_applications
-fi
+select_applications
 
 # Done!
 show_completion

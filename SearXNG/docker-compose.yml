@@ -1,5 +1,5 @@
 services:
-  redis:
+  searxng-redis:
     image: docker.io/valkey/valkey:${VALKEY_VERSION}
     container_name: searxng-redis
     restart: unless-stopped
@@ -7,7 +7,7 @@ services:
     volumes:
       - ./valkey-data:/data
     networks:
-      - proxy-network
+      - searxng-internal
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 30s
@@ -16,7 +16,7 @@ services:
       start_period: 10s
     labels:
       - "com.docker.compose.project=searxng"
-      - "com.docker.compose.service=redis"
+      - "com.docker.compose.service=searxng-redis"
 
   searxng:
     image: docker.io/searxng/searxng:${SEARXNG_VERSION}
@@ -28,13 +28,16 @@ services:
       - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}
       - SEARXNG_SECRET=${SEARXNG_SECRET}
     volumes:
-      - ./config:/etc/searxng:rw
+      - ./searxng:/etc/searxng:rw
+      - ./searxng-data:/var/cache/searxng:rw
     expose:
       - "8080" # Web UI (proxied via Nginx)
     networks:
       - proxy-network
+      - searxng-internal
     depends_on:
-      - redis
+      searxng-redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/healthz"]
       interval: 30s
@@ -50,7 +53,10 @@ services:
       - CHOWN
       - SETGID
       - SETUID
+      - DAC_OVERRIDE
 
 networks:
   proxy-network:
     external: true
+  searxng-internal:
+    driver: bridge

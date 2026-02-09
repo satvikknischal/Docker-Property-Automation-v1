@@ -32,10 +32,8 @@ services:
       # Social auth (optional)
       # SOCIAL_PROVIDERS: allauth.socialaccount.providers.openid_connect
     volumes:
-      # Static files (named volume recommended by docs)
-      - tandoor-staticfiles:/opt/recipes/staticfiles
-      # Nginx config (named volume - do not use bind mount per docs)
-      - tandoor-nginx-config:/opt/recipes/nginx/conf.d
+      # Static files
+      - ./tandoor-staticfiles:/opt/recipes/staticfiles
       # Media files (recipe images, etc.)
       - ./mediafiles:/opt/recipes/mediafiles
     expose:
@@ -47,7 +45,7 @@ services:
       tandoor-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3

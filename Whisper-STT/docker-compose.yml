@@ -21,12 +21,14 @@ services:
       - "${WHISPER_PORT}:10300"
     networks:
       - proxy-network
+    # NOTE: Wyoming protocol is NOT HTTP — curl/wget will always timeout.
+    # Use bash TCP connection check to verify the port is listening.
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:10300"]
-      interval: 30s
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/10300' 2>/dev/null || exit 1"]
+      interval: 60s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 120s
     labels:
       - "com.docker.compose.project=faster-whisper"
       - "com.docker.compose.service=faster-whisper"

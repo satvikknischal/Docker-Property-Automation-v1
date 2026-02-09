@@ -22,7 +22,7 @@ services:
       # Optional: Encryption key for credentials (set in .env)
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
     volumes:
-      - ./data:/home/node/.n8n
+      - ./n8n_data:/home/node/.n8n
       - ./local-files:/files
     expose:
       - "5678" # Web UI (proxied via Nginx)
@@ -41,3 +41,4 @@ services:
 networks:
   proxy-network:
     external: true
+

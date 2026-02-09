@@ -17,12 +17,11 @@ services:
       - "9443" # Web UI HTTPS
     networks:
       - proxy-network
+    # NOTE: Portainer CE LTS image does not include wget, curl, or /docker/healthcheck.
+    # Healthcheck is disabled because no HTTP tools are available in this minimal image.
+    # Monitor Portainer health via Uptime Kuma or Nginx Proxy Manager instead.
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/api/system/status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      disable: true
     labels:
       - "com.docker.compose.project=portainer"
       - "com.docker.compose.service=portainer"

@@ -25,8 +25,9 @@ services:
       - "5984" # CouchDB API (proxied via Nginx)
     networks:
       - proxy-network
+    # CouchDB requires authentication for /_up — pass credentials via env vars
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5984/_up"]
+      test: ["CMD-SHELL", "curl -f http://${OBSIDIAN_SYNC_USER}:${OBSIDIAN_SYNC_PASSWORD}@localhost:5984/_up || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

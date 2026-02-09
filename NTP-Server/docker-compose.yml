@@ -14,8 +14,9 @@ services:
       TZ: ${TZ}
     networks:
       - proxy-network
+    # cturra/ntp uses chrony — use chronyc to verify tracking
     healthcheck:
-      test: ["CMD", "ntpdate", "-q", "127.0.0.1"]
+      test: ["CMD", "chronyc", "tracking"]
       interval: 60s
       timeout: 15s
       retries: 3
@@ -25,5 +26,5 @@ services:
       - "com.docker.compose.service=ntp"
 
 networks:
-  proxy-network:
+  proxy-network: 
     external: true
