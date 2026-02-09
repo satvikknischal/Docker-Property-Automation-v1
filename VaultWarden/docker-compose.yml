@@ -1,0 +1,32 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:${VAULTWARDEN_VERSION}
+    container_name: vaultwarden
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      DOMAIN: ${VAULTWARDEN_DOMAIN}
+      ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN}
+      SIGNUPS_ALLOWED: ${VAULTWARDEN_SIGNUPS_ALLOWED}
+      INVITATIONS_ALLOWED: ${VAULTWARDEN_INVITATIONS_ALLOWED}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ./vw-data/:/data/
+    expose:
+      - "80" # Web UI (proxied via Nginx)
+    networks:
+      - proxy-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/alive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=vaultwarden"
+      - "com.docker.compose.service=vaultwarden"
+
+networks:
+  proxy-network:
+    external: true
