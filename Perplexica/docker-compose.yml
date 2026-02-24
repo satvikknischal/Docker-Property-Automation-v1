@@ -6,6 +6,7 @@ services:
     env_file:
       - ../.env
     environment:
+      - TZ=${TZ}
       - SEARXNG_API_URL=${PERPLEXICA_SEARXNG_URL}
       - OPENAI_API_KEY=${PERPLEXICA_OPENAI_API_KEY}
       - OLLAMA_API_URL=${PERPLEXICA_OLLAMA_URL}

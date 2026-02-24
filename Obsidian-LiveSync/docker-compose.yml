@@ -14,6 +14,7 @@ services:
     env_file:
       - ../.env
     environment:
+      TZ: ${TZ}
       COUCHDB_USER: ${OBSIDIAN_SYNC_USER}
       COUCHDB_PASSWORD: ${OBSIDIAN_SYNC_PASSWORD}
     volumes:

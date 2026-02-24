@@ -1,0 +1,35 @@
+#
+# Byparr - FlareSolverr Alternative
+# Documentation: https://github.com/ThePhaseless/Byparr
+#
+# Captcha/Cloudflare bypass proxy for Prowlarr and other *arr apps
+# Drop-in replacement for FlareSolverr on port 8191
+#
+
+services:
+  byparr:
+    image: ghcr.io/thephaseless/byparr:${BYPARR_VERSION}
+    container_name: byparr
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ../../.env
+    environment:
+      - TZ=${TZ}
+    expose:
+      - "8191" # Solver API (accessed by Prowlarr internally)
+    networks:
+      - proxy-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8191/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=byparr"
+      - "com.docker.compose.service=byparr"
+
+networks:
+  proxy-network:
+    external: true

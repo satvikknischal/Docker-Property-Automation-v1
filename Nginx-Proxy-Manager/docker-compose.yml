@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     env_file:
       - ../.env
+    environment:
+      - TZ=${TZ}
     ports:
       - '${NPM_HTTP_PORT}:80'
       - '${NPM_ADMIN_PORT}:81'

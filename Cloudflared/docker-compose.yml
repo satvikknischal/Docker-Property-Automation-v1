@@ -7,6 +7,7 @@ services:
       - ../.env
     command: tunnel run
     environment:
+      - TZ=${TZ}
       - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
     networks:
       - proxy-network

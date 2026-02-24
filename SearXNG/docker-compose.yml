@@ -25,6 +25,7 @@ services:
     env_file:
       - ../.env
     environment:
+      - TZ=${TZ}
       - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}
       - SEARXNG_SECRET=${SEARXNG_SECRET}
     volumes:

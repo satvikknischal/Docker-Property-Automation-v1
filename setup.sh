@@ -262,7 +262,7 @@ display_app_menu() {
     echo -e "${YELLOW}Media & Entertainment:${NC}"
     echo "  5) Plex                   - Media streaming server"
     echo "  6) Frigate                - AI-powered NVR"
-    echo "  7) Arr-Stack              - Prowlarr, Radarr, Sonarr, Overseerr"
+    echo "  7) Arr-Stack              - Prowlarr, Radarr, Sonarr, Overseerr, Byparr"
     echo "  8) qBittorrent            - Torrent client"
     echo "  9) SABnzbd                - Usenet client"
     echo ""
@@ -451,6 +451,7 @@ process_selection() {
             install_app "Arr-Stack/Radarr" "Radarr"
             install_app "Arr-Stack/Sonarr" "Sonarr"
             install_app "Arr-Stack/Overseerr" "Overseerr"
+            install_app "Arr-Stack/Byparr" "Byparr"
             ;;
         8) install_app "qBittorrent" "qBittorrent" ;;
         9) install_app "SabNZBd" "SABnzbd" ;;

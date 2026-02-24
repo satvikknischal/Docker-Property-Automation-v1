@@ -8,7 +8,10 @@ services:
     environment:
       - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
       - TZ=${TZ}
+    user: "0:0"
+    entrypoint: ["sh", "-c", "addgroup -g ${DOCKER_GID:-988} docker 2>/dev/null; addgroup barium docker 2>/dev/null; exec sh run.sh"]
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./appdata:/appdata
     expose:
       - "7575" # Web UI (proxied via Nginx)
