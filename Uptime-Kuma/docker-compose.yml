@@ -9,6 +9,8 @@ services:
       - TZ=${TZ}
     volumes:
       - ./data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      #check if :ro is needed or not, if not remove it
     expose:
       - "3001" # Web UI (proxied via Nginx)
     networks:

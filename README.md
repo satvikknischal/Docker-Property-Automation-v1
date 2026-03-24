@@ -19,30 +19,28 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
    cd docker-property-automation
    ```
 
-2. **Run the setup script:**
+2. **Run the setup script (first time):**
    ```bash
    chmod +x setup.sh
    ./setup.sh
    ```
+   The script will copy `.env.example` to `.env` and exit, prompting you to configure it.
 
 3. **Configure the `.env` file:**
    ```bash
    nano .env  # or use your preferred editor
    ```
    - Set `BASE_DOMAIN` to your server's domain
-   - Generate required secrets (use provided `openssl` commands)
-   - Configure service-specific paths
+   - Set `TZ`, `PUID`, `PGID`
+   - Generate required secrets (use provided `openssl` commands in comments)
+   - Configure storage paths for media, books, downloads, etc.
+   - Add API keys for any LLM providers you use
 
-4. **Deploy services:**
+4. **Run the setup script again to deploy:**
    ```bash
-   # Start with the reverse proxy
-   cd Nginx-Proxy-Manager
-   docker compose up -d
-
-   # Then deploy other services
-   cd ../VaultWarden
-   docker compose up -d
+   ./setup.sh
    ```
+   Confirm your `.env` is configured, then select which services to install from the interactive menu.
 
 ## 📁 Project Structure
 
@@ -56,6 +54,7 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 │
 ├── Nginx-Proxy-Manager/      # Reverse proxy & SSL
 ├── Cloudflared/              # Cloudflare Tunnel
+├── Tailscale/                # Mesh VPN & remote access
 ├── Portainer/                # Docker management UI
 ├── NTP-Server/               # Network time server
 │
@@ -65,7 +64,8 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 │   ├── Prowlarr/             # Indexer manager
 │   ├── Radarr/               # Movies
 │   ├── Sonarr/               # TV Shows
-│   └── Overseerr/            # Request management
+│   ├── Seerr/                # Request management
+│   └── Byparr/               # Captcha/Cloudflare bypass
 ├── qBittorrent/              # Torrent client
 ├── SabNZBd/                  # Usenet client
 │
@@ -104,6 +104,7 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 | **Nginx Proxy Manager** | 80, 81, 443 | Reverse proxy with SSL management |
 | **Portainer** | 9000 | Docker container management |
 | **Cloudflared** | - | Cloudflare Tunnel for secure access |
+| **Tailscale** | - | Mesh VPN, exit node & subnet router |
 | **NTP Server** | 123/UDP | Network time synchronization |
 | **Uptime Kuma** | 3001 | Service status monitoring |
 
@@ -115,7 +116,8 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 | **Prowlarr** | 9696 | Indexer manager for *arr apps |
 | **Radarr** | 7878 | Movie collection manager |
 | **Sonarr** | 8989 | TV series collection manager |
-| **Overseerr** | 5055 | Media request management |
+| **Seerr** | 5055 | Media request management |
+| **Byparr** | 8191 | Captcha/Cloudflare bypass for indexers |
 | **qBittorrent** | 8080 | Torrent download client |
 | **SABnzbd** | 8080 | Usenet download client |
 
@@ -178,13 +180,14 @@ All container images use version variables defined in `.env`:
 
 ```bash
 # Pin versions for stability
-PLEX_VERSION=latest
+PLEX_VERSION=1.43.0
 IMMICH_VERSION=v2.5.2
 LITELLM_VERSION=v1.81.0-stable
 
-# Update and redeploy
-docker compose pull
-docker compose up -d
+# Update: change version in .env, then redeploy
+cd ServiceName
+docker compose --env-file ../.env pull
+docker compose --env-file ../.env up -d
 ```
 
 ## 🔧 Usage
@@ -193,11 +196,11 @@ docker compose up -d
 
 ```bash
 cd ServiceName
-docker compose up -d      # Start
-docker compose down       # Stop
-docker compose logs -f    # View logs
-docker compose pull       # Update image
-docker compose restart    # Restart
+docker compose --env-file ../.env up -d      # Start
+docker compose --env-file ../.env down       # Stop
+docker compose --env-file ../.env logs -f    # View logs
+docker compose --env-file ../.env pull       # Update image
+docker compose --env-file ../.env restart    # Restart
 ```
 
 ### Managing All Services
@@ -239,6 +242,7 @@ docker compose restart    # Restart
 | Service | Network Mode | Reason |
 |---------|--------------|--------|
 | **Homebridge** | `host` | mDNS/Bonjour for HomeKit discovery |
+| **Tailscale** | `host` | Subnet routing & exit node require host network access |
 | **Minecraft** | Direct ports | Game clients need direct TCP access |
 | **Plex** | Hybrid | Direct port for local network discovery |
 
@@ -298,10 +302,18 @@ sudo lsof -i :PORT
 | Plex | https://support.plex.tv/ |
 | Frigate | https://docs.frigate.video/ |
 | *arr Apps | https://wiki.servarr.com/ |
+| Seerr | https://github.com/seerr-team/seerr |
+| Byparr | https://github.com/ThePhaseless/Byparr |
 | n8n | https://docs.n8n.io/ |
 | LiteLLM | https://docs.litellm.ai/ |
+| SearXNG | https://docs.searxng.org/ |
+| Perplexica | https://github.com/ItzCrazyKns/Perplexica |
 | Tandoor | https://docs.tandoor.dev/ |
 | Homebridge | https://homebridge.io/ |
+| Homarr | https://homarr.dev/docs/ |
+| BookLore | https://github.com/adityachoudhary/booklore |
+| Obsidian LiveSync | https://github.com/vrtmrz/obsidian-livesync |
+| Tailscale | https://tailscale.com/kb/1282/docker |
 
 ## 🤝 Contributing
 

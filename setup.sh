@@ -257,43 +257,44 @@ display_app_menu() {
     echo "  1) Nginx Proxy Manager    - Reverse proxy with SSL"
     echo "  2) Portainer              - Docker management UI"
     echo "  3) Cloudflared            - Cloudflare Tunnel"
-    echo "  4) Uptime Kuma            - Status monitoring"
+    echo "  4) Tailscale              - Mesh VPN & remote access"
+    echo "  5) Uptime Kuma            - Status monitoring"
     echo ""
     echo -e "${YELLOW}Media & Entertainment:${NC}"
-    echo "  5) Plex                   - Media streaming server"
-    echo "  6) Frigate                - AI-powered NVR"
-    echo "  7) Arr-Stack              - Prowlarr, Radarr, Sonarr, Overseerr, Byparr"
-    echo "  8) qBittorrent            - Torrent client"
-    echo "  9) SABnzbd                - Usenet client"
+    echo "  6) Plex                   - Media streaming server"
+    echo "  7) Frigate                - AI-powered NVR"
+    echo "  8) Arr-Stack              - Prowlarr, Radarr, Sonarr, Seerr, Byparr"
+    echo "  9) qBittorrent            - Torrent client"
+    echo " 10) SABnzbd                - Usenet client"
     echo ""
     echo -e "${YELLOW}AI & LLM:${NC}"
-    echo " 10) Open WebUI             - LLM chat interface"
-    echo " 11) LiteLLM                - LLM API proxy"
-    echo " 12) Perplexica             - AI search engine"
-    echo " 13) SearXNG                - Privacy search"
-    echo " 14) Whisper STT            - Speech-to-text"
-    echo " 15) Piper TTS              - Text-to-speech"
+    echo " 11) Open WebUI             - LLM chat interface"
+    echo " 12) LiteLLM                - LLM API proxy"
+    echo " 13) Perplexica             - AI search engine"
+    echo " 14) SearXNG                - Privacy search"
+    echo " 15) Whisper STT            - Speech-to-text"
+    echo " 16) Piper TTS              - Text-to-speech"
     echo ""
     echo -e "${YELLOW}Productivity:${NC}"
-    echo " 16) VaultWarden            - Password manager"
-    echo " 17) NextCloud AIO          - Cloud storage"
-    echo " 18) n8n                    - Workflow automation"
-    echo " 19) StirlingPDF            - PDF tools"
-    echo " 20) Homarr                 - Dashboard"
+    echo " 17) VaultWarden            - Password manager"
+    echo " 18) NextCloud AIO          - Cloud storage"
+    echo " 19) n8n                    - Workflow automation"
+    echo " 20) StirlingPDF            - PDF tools"
+    echo " 21) Homarr                 - Dashboard"
     echo ""
     echo -e "${YELLOW}Home & Utility:${NC}"
-    echo " 21) Homebridge             - HomeKit bridge"
-    echo " 22) Immich                 - Photo management"
-    echo " 23) Tandoor                - Recipe manager"
+    echo " 22) Homebridge             - HomeKit bridge"
+    echo " 23) Immich                 - Photo management"
+    echo " 24) Tandoor                - Recipe manager"
     echo ""
     echo -e "${YELLOW}Books:${NC}"
-    echo " 24) BookLore               - Book library"
-    echo " 25) Shelfmark              - Book downloader"
+    echo " 25) BookLore               - Book library"
+    echo " 26) Shelfmark              - Book downloader"
     echo ""
     echo -e "${YELLOW}Other:${NC}"
-    echo " 26) Obsidian LiveSync      - Note sync server"
-    echo " 27) Minecraft Server       - Game server"
-    echo " 28) NTP Server             - Time server"
+    echo " 27) Obsidian LiveSync      - Note sync server"
+    echo " 28) Minecraft Server       - Game server"
+    echo " 29) NTP Server             - Time server"
     echo ""
     echo -e "${GREEN}  A) Install ALL applications${NC}"
     echo -e "${RED}  Q) Quit${NC}"
@@ -335,7 +336,7 @@ prepare_service_dirs() {
         "Arr-Stack/Sonarr")
             mkdir -p "$SCRIPT_DIR/$app_dir/config"
             ;;
-        "Arr-Stack/Overseerr")
+        "Arr-Stack/Seerr")
             mkdir -p "$SCRIPT_DIR/$app_dir/config"
             ;;
         "qBittorrent")
@@ -406,6 +407,9 @@ prepare_service_dirs() {
         "Piper-TTS")
             mkdir -p "$SCRIPT_DIR/$app_dir/config"
             ;;
+        "Tailscale")
+            mkdir -p "$SCRIPT_DIR/$app_dir/state"
+            ;;
     esac
 }
 
@@ -443,37 +447,38 @@ process_selection() {
         1) install_app "Nginx-Proxy-Manager" "Nginx Proxy Manager" ;;
         2) install_app "Portainer" "Portainer" ;;
         3) install_app "Cloudflared" "Cloudflared" ;;
-        4) install_app "Uptime-Kuma" "Uptime Kuma" ;;
-        5) install_app "Plex" "Plex" ;;
-        6) install_app "Frigate" "Frigate" ;;
-        7)
+        4) install_app "Tailscale" "Tailscale" ;;
+        5) install_app "Uptime-Kuma" "Uptime Kuma" ;;
+        6) install_app "Plex" "Plex" ;;
+        7) install_app "Frigate" "Frigate" ;;
+        8)
             install_app "Arr-Stack/Prowlarr" "Prowlarr"
             install_app "Arr-Stack/Radarr" "Radarr"
             install_app "Arr-Stack/Sonarr" "Sonarr"
-            install_app "Arr-Stack/Overseerr" "Overseerr"
+            install_app "Arr-Stack/Seerr" "Seerr"
             install_app "Arr-Stack/Byparr" "Byparr"
             ;;
-        8) install_app "qBittorrent" "qBittorrent" ;;
-        9) install_app "SabNZBd" "SABnzbd" ;;
-        10) install_app "OpenWebUI" "Open WebUI" ;;
-        11) install_app "LiteLLM" "LiteLLM" ;;
-        12) install_app "Perplexica" "Perplexica" ;;
-        13) install_app "SearXNG" "SearXNG" ;;
-        14) install_app "Whisper-STT" "Whisper STT" ;;
-        15) install_app "Piper-TTS" "Piper TTS" ;;
-        16) install_app "VaultWarden" "VaultWarden" ;;
-        17) install_app "NextCloud-AIO" "NextCloud AIO" ;;
-        18) install_app "n8n" "n8n" ;;
-        19) install_app "StirlingPDF" "StirlingPDF" ;;
-        20) install_app "Homarr" "Homarr" ;;
-        21) install_app "Homebridge" "Homebridge" ;;
-        22) install_app "Immich" "Immich" ;;
-        23) install_app "Tandoor" "Tandoor" ;;
-        24) install_app "Book-Worms/BookLore" "BookLore" ;;
-        25) install_app "Book-Worms/Shelfmark" "Shelfmark" ;;
-        26) install_app "Obsidian-LiveSync" "Obsidian LiveSync" ;;
-        27) install_app "Minecraft-Server" "Minecraft Server" ;;
-        28) install_app "NTP-Server" "NTP Server" ;;
+        9) install_app "qBittorrent" "qBittorrent" ;;
+        10) install_app "SabNZBd" "SABnzbd" ;;
+        11) install_app "OpenWebUI" "Open WebUI" ;;
+        12) install_app "LiteLLM" "LiteLLM" ;;
+        13) install_app "Perplexica" "Perplexica" ;;
+        14) install_app "SearXNG" "SearXNG" ;;
+        15) install_app "Whisper-STT" "Whisper STT" ;;
+        16) install_app "Piper-TTS" "Piper TTS" ;;
+        17) install_app "VaultWarden" "VaultWarden" ;;
+        18) install_app "NextCloud-AIO" "NextCloud AIO" ;;
+        19) install_app "n8n" "n8n" ;;
+        20) install_app "StirlingPDF" "StirlingPDF" ;;
+        21) install_app "Homarr" "Homarr" ;;
+        22) install_app "Homebridge" "Homebridge" ;;
+        23) install_app "Immich" "Immich" ;;
+        24) install_app "Tandoor" "Tandoor" ;;
+        25) install_app "Book-Worms/BookLore" "BookLore" ;;
+        26) install_app "Book-Worms/Shelfmark" "Shelfmark" ;;
+        27) install_app "Obsidian-LiveSync" "Obsidian LiveSync" ;;
+        28) install_app "Minecraft-Server" "Minecraft Server" ;;
+        29) install_app "NTP-Server" "NTP Server" ;;
         *)
             echo -e "${RED}Invalid selection: $selection${NC}"
             ;;
@@ -494,7 +499,7 @@ install_all_apps() {
     install_app "Portainer" "Portainer"
 
     # Then other services
-    for i in {3..28}; do
+    for i in {3..29}; do
         process_selection $i
     done
 

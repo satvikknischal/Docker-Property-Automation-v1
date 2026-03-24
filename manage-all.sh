@@ -10,6 +10,7 @@ COMMAND=${1:-status}
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Script directory (for finding root .env)
@@ -23,69 +24,92 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
-echo "============================================"
-echo "Docker Property Automation - Service Manager"
-echo "Command: $COMMAND"
-echo "============================================"
+# Validate command
+case $COMMAND in
+    up|down|restart|pull|logs|ps|status)
+        ;;
+    *)
+        echo "Unknown command: $COMMAND"
+        echo "Usage: $0 [up|down|restart|pull|logs|ps|status]"
+        exit 1
+        ;;
+esac
+
+echo -e "${CYAN}============================================${NC}"
+echo -e "${CYAN}Docker Property Automation - Service Manager${NC}"
+echo -e "${CYAN}Command: $COMMAND${NC}"
+echo -e "${CYAN}============================================${NC}"
 echo ""
 
-# Function to run docker compose with env file
-dc() {
-    docker compose --env-file "$ENV_FILE" "$@"
-}
+# Collect all compose files into an array (avoids subshell piping issues)
+COMPOSE_FILES=()
+while IFS= read -r -d '' file; do
+    COMPOSE_FILES+=("$file")
+done < <(find "$SCRIPT_DIR" -maxdepth 3 \( -name "docker-compose.yml" -o -name "compose.yml" \) -print0 | sort -z)
 
-# Find all compose files (including nested directories like Arr-Stack/*)
-find . -maxdepth 3 \( -name "docker-compose.yml" -o -name "compose.yml" \) | sort | while read compose_file; do
+RUNNING=0
+STOPPED=0
+
+for compose_file in "${COMPOSE_FILES[@]}"; do
     service_dir=$(dirname "$compose_file")
+    # Get relative path from script dir for display
+    rel_path="${service_dir#$SCRIPT_DIR/}"
     service_name=$(basename "$service_dir")
-    
+
     # Skip if in root or hidden directories
-    if [[ "$service_dir" == "." ]] || [[ "$service_name" == .* ]]; then
+    if [[ "$service_dir" == "$SCRIPT_DIR" ]] || [[ "$service_name" == .* ]]; then
         continue
     fi
-    
-    echo -e "${YELLOW}Processing: $service_name${NC}"
+
     cd "$service_dir"
-    
+
     case $COMMAND in
         up)
-            dc up -d
+            echo -e "${YELLOW}Starting: $rel_path${NC}"
+            docker compose --env-file "$ENV_FILE" up -d
             ;;
         down)
-            dc down
+            echo -e "${YELLOW}Stopping: $rel_path${NC}"
+            docker compose --env-file "$ENV_FILE" down
             ;;
         restart)
-            dc restart
+            echo -e "${YELLOW}Restarting: $rel_path${NC}"
+            docker compose --env-file "$ENV_FILE" restart
             ;;
         pull)
-            dc pull
+            echo -e "${YELLOW}Pulling: $rel_path${NC}"
+            docker compose --env-file "$ENV_FILE" pull
             ;;
         logs)
-            dc logs --tail=50
+            echo -e "${YELLOW}=== $rel_path ===${NC}"
+            docker compose --env-file "$ENV_FILE" logs --tail=50
             ;;
         ps)
-            dc ps
+            echo -e "${YELLOW}=== $rel_path ===${NC}"
+            docker compose --env-file "$ENV_FILE" ps
             ;;
         status)
-            if dc ps 2>/dev/null | grep -q "Up\|running"; then
-                echo -e "${GREEN}✓ Running${NC}"
+            if docker compose --env-file "$ENV_FILE" ps 2>/dev/null | grep -q "Up\|running"; then
+                echo -e "  ${GREEN}✓${NC} $rel_path"
+                ((RUNNING++))
             else
-                echo -e "${RED}✗ Not running${NC}"
+                echo -e "  ${RED}✗${NC} $rel_path"
+                ((STOPPED++))
             fi
             ;;
-        *)
-            echo "Unknown command: $COMMAND"
-            echo "Usage: $0 [up|down|restart|pull|logs|ps|status]"
-            exit 1
-            ;;
     esac
-    
+
     cd "$SCRIPT_DIR"
-    echo ""
+
+    # Add spacing for verbose commands
+    if [[ "$COMMAND" != "status" ]]; then
+        echo ""
+    fi
 done
 
 if [ "$COMMAND" == "status" ]; then
-    echo "============================================"
-    echo "Summary: Run 'docker compose ps' in each service directory for details"
+    echo ""
+    echo -e "${CYAN}============================================${NC}"
+    echo -e "  ${GREEN}Running: $RUNNING${NC}  |  ${RED}Stopped: $STOPPED${NC}"
+    echo -e "${CYAN}============================================${NC}"
 fi
-

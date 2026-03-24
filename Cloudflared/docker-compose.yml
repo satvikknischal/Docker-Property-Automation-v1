@@ -8,6 +8,7 @@ services:
     command: tunnel run
     environment:
       - TZ=${TZ}
+      #TZ might not be needed, remove it if it causes issues
       - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
     networks:
       - proxy-network
