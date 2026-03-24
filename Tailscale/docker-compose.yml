@@ -1,0 +1,71 @@
+#
+# Tailscale - Secure Mesh VPN & Remote Access
+# Documentation: https://tailscale.com/kb/1282/docker
+#
+# NOTE: network_mode: host is REQUIRED for subnet routing and exit node functionality.
+# Tailscale must see all host interfaces to route traffic to Docker networks and LAN.
+# This service cannot use proxy-network like other services.
+#
+# SETUP STEPS:
+#   1. Create an auth key at https://login.tailscale.com/admin/settings/keys
+#      - Check "Reusable" so the container can re-auth on restart
+#      - Check "Ephemeral" if you don't want stale nodes on the tailnet
+#      - Or use an OAuth client secret with tags for ACL-managed access
+#   2. Set TS_AUTHKEY in .env
+#   3. Set TS_ROUTES to your LAN subnet + Docker subnet (see .env.example)
+#   4. After starting, approve the subnet routes and exit node in the Tailscale Admin Console:
+#      https://login.tailscale.com/admin/machines
+#
+# FEATURES ENABLED:
+#   - Exit Node: Route ALL traffic through this server (great for public WiFi)
+#   - Subnet Router: Access your LAN + Docker services remotely without per-device Tailscale
+#   - MagicDNS: Resolve tailnet hostnames automatically
+#   - Tailscale SSH: SSH into server without opening port 22 (enable in ACL policy)
+#   - HTTPS Certs: Free TLS certs for *.ts.net domains (use with tailscale cert)
+#
+
+services:
+  tailscale:
+    image: tailscale/tailscale:${TAILSCALE_VERSION}
+    container_name: tailscale
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ../.env
+    environment:
+      # Auth key — generate at https://login.tailscale.com/admin/settings/keys
+      TS_AUTHKEY: ${TS_AUTHKEY}
+      # Hostname shown in the Tailscale admin console
+      TS_HOSTNAME: ${TS_HOSTNAME}
+      # Persist state so the node identity survives container restarts
+      TS_STATE_DIR: /var/lib/tailscale
+      # Extra args passed to 'tailscale set' on startup
+      # --advertise-exit-node: allows routing ALL traffic through this server
+      # --advertise-routes: expose local subnets to the tailnet
+      # --accept-dns: use MagicDNS from the tailnet
+      # --accept-routes: accept routes advertised by other tailnet nodes
+      TS_EXTRA_ARGS: >-
+        --advertise-exit-node
+        --advertise-routes=${TS_ROUTES}
+        --accept-dns=${TS_ACCEPT_DNS}
+        --accept-routes
+      TZ: ${TZ}
+    volumes:
+      # Persist Tailscale state (node keys, identity) across restarts
+      - ./state:/var/lib/tailscale
+      # TUN device access (required for kernel-mode networking)
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      # NET_ADMIN: required for creating/managing network interfaces
+      - NET_ADMIN
+      # SYS_MODULE: required for loading the tun kernel module if not already loaded
+      - SYS_MODULE
+    healthcheck:
+      test: ["CMD", "tailscale", "status", "--json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=tailscale"
+      - "com.docker.compose.service=tailscale"

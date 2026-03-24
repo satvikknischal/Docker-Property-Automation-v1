@@ -1,0 +1,598 @@
+# =============================================================================
+#  Frigate Configuration — Residential Site
+#  
+#  Mode: Detection & Snapshots ONLY (no recording — separate NVR handles that)
+#  Cameras: 16 Dahua/CP Plus cameras (from Camera Details sheet)
+#  Detector: OpenVINO (Intel GPU/CPU)
+#  Retention: 4 days auto-delete
+#  
+#  Required environment variables (set in .env):
+#    FRIGATE_RTSP_USER       — RTSP camera username  (e.g. admin)
+#    FRIGATE_RTSP_PASSWORD   — RTSP camera password  (URL-encoded, e.g. Dls@286%23)
+#    FRIGATE_MQTT_USER       — MQTT broker username
+#    FRIGATE_MQTT_PASSWORD   — MQTT broker password
+# =============================================================================
+
+# ── MQTT ─────────────────────────────────────────────────────────────────────
+mqtt:
+  host: 10.100.10.22
+  port: 1883
+  user: "{FRIGATE_MQTT_USER}"
+  password: "{FRIGATE_MQTT_PASSWORD}"
+  topic_prefix: frigate
+
+# ── Hardware Acceleration  ───────────────────────────────────────────────────
+# NOTE: VAAPI disabled — Intel iGPU cannot handle 16 concurrent HW decode
+# sessions (causes "Failed to sync surface" crashes). CPU decoding of the
+# low-res 704×576 sub-streams is lightweight and stable.
+ffmpeg:
+  hwaccel_args: []
+
+# ── Go2rtc — Live streaming & WebRTC ─────────────────────────────────────────
+go2rtc:
+  streams:
+    # ── Main Gate ──
+    Main_Gate:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.11:554/cam/realmonitor?channel=1&subtype=0
+    Main_Gate_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.11:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Garden ──
+    Garden:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.12:554/cam/realmonitor?channel=1&subtype=0
+    Garden_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.12:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Living Room ──
+    Living_Room:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.13:554/cam/realmonitor?channel=1&subtype=0
+    Living_Room_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.13:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Dining Area ──
+    Dining_Area:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.14:554/cam/realmonitor?channel=1&subtype=0
+    Dining_Area_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.14:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Kitchen Sink ──
+    Kitchen_Sink:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.15:554/cam/realmonitor?channel=1&subtype=0
+    Kitchen_Sink_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.15:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Kitchen Dining ──
+    Kitchen_Dining:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.16:554/cam/realmonitor?channel=1&subtype=0
+    Kitchen_Dining_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.16:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Gallery ──
+    Gallery:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.17:554/cam/realmonitor?channel=1&subtype=0
+    Gallery_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.17:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Top Backside ──
+    Top_Backside:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.18:554/cam/realmonitor?channel=1&subtype=0
+    Top_Backside_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.18:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── South Porch ──
+    South_Porch:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.19:554/cam/realmonitor?channel=1&subtype=0
+    South_Porch_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.19:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Backside Drying Area ──
+    Backside_Drying_Area:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.20:554/cam/realmonitor?channel=1&subtype=0
+    Backside_Drying_Area_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.20:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── North Bore ──
+    North_Bore:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.21:554/cam/realmonitor?channel=1&subtype=0
+    North_Bore_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.21:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── North Entrance Top ──
+    North_Entrance_Top:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.22:554/cam/realmonitor?channel=1&subtype=0
+    North_Entrance_Top_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.22:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Backside Tanks ──
+    Backside_Tanks:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.23:554/cam/realmonitor?channel=1&subtype=0
+    Backside_Tanks_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.23:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Study ──
+    Study:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.24:554/cam/realmonitor?channel=1&subtype=0
+    Study_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.24:554/cam/realmonitor?channel=1&subtype=1
+
+    # ── Utility ──
+    Utility:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.25:554/cam/realmonitor?channel=1&subtype=0
+    Utility_Sub:
+      - rtsp://{FRIGATE_RTSP_USER}:{FRIGATE_RTSP_PASSWORD}@10.100.40.25:554/cam/realmonitor?channel=1&subtype=1
+
+  # WebRTC configuration for low-latency live view
+  webrtc:
+    candidates:
+      - 10.100.10.23:8555    # UPDATE: Replace with your Frigate server IP
+      - stun:8555
+
+# ── Detector — OpenVINO (Intel GPU) ──────────────────────────────────────────
+detectors:
+  ov:
+    type: openvino
+    device: GPU
+
+model:
+  width: 300
+  height: 300
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  path: /openvino-model/ssdlite_mobilenet_v2.xml
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+
+# ── Global detection defaults ────────────────────────────────────────────────
+detect:
+  enabled: true
+  width: 704
+  height: 576
+  fps: 5
+
+# ── Global object tracking ──────────────────────────────────────────────────
+objects:
+  track:
+    - person
+    - dog
+    - cat
+    - car
+    - motorcycle
+    - bicycle
+  filters:
+    person:
+      min_area: 500
+      threshold: 0.7
+    car:
+      min_area: 1000
+      threshold: 0.7
+
+# ── Recording DISABLED — Separate NVR handles continuous recording ───────────
+record:
+  enabled: false
+
+# ── Snapshots — Alerts & events only, 4-day retention ───────────────────────
+snapshots:
+  enabled: true
+  timestamp: true
+  bounding_box: true
+  crop: true                  # Crop snapshot to the detected object
+  retain:
+    default: 4                # Auto-delete after 4 days
+    objects:
+      person: 4
+      car: 4
+      dog: 4
+
+# ── Review configuration ────────────────────────────────────────────────────
+review:
+  alerts:
+    labels:
+      - person
+      - car
+      - dog
+    required_zones: []
+  detections:
+    labels:
+      - person
+      - car
+      - motorcycle
+      - dog
+      - cat
+    required_zones: []
+
+# ── Semantic Search (NEW — requires Frigate 0.14+) ──────────────────────────
+# Enables natural-language search across events, e.g. "person at the gate at night"
+semantic_search:
+  enabled: true
+
+# ── Generative AI (NEW — requires Frigate 0.14+) ────────────────────────────
+# Auto-generates text descriptions for every tracked event using an LLM.
+# Uncomment and configure one of the providers below.
+
+# Option A: Gemini (Google) — recommended, generous free tier
+# genai:
+#   enabled: true
+#   provider: gemini
+#   api_key: "{FRIGATE_GENAI_API_KEY}"
+#   model: gemini-2.0-flash
+
+# Option B: OpenAI
+# genai:
+#   enabled: true
+#   provider: openai
+#   api_key: "{FRIGATE_GENAI_API_KEY}"
+#   model: gpt-4o-mini
+
+# Option C: Ollama (fully local, no API key needed)
+# genai:
+#   enabled: true
+#   provider: ollama
+#   model: llava
+#   api_key: ""
+
+# =============================================================================
+#  CAMERA CONFIGURATIONS
+#  
+#  No recording role — only sub-stream for detection + snapshots
+#  Main streams remain in go2rtc for live viewing in the UI
+#  Indoor cameras  → track: person, dog, cat
+#  Outdoor cameras → track: person, car, motorcycle, bicycle, dog, cat
+# =============================================================================
+cameras:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  OUTDOOR CAMERAS
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # ── Main Gate (CP-UNC-DA21L3C-L — 10.100.40.11) ──
+  Main_Gate:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Main_Gate_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - car
+        - motorcycle
+        - bicycle
+        - dog
+        - cat
+      filters:
+        person:
+          min_area: 300
+          threshold: 0.7
+        car:
+          min_area: 1000
+          threshold: 0.7
+
+  # ── Garden (CP-UNC-DA21L3C-L — 10.100.40.12) ──
+  Garden:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Garden_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - car
+        - motorcycle
+        - dog
+        - cat
+      filters:
+        person:
+          min_area: 300
+          threshold: 0.7
+
+  # ── Top Backside (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.18) ──
+  Top_Backside:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Top_Backside_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - car
+        - motorcycle
+        - dog
+        - cat
+      filters:
+        person:
+          min_area: 300
+          threshold: 0.7
+
+  # ── South Porch (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.19) ──
+  South_Porch:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/South_Porch_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - car
+        - motorcycle
+        - dog
+        - cat
+      filters:
+        person:
+          min_area: 300
+          threshold: 0.7
+
+  # ── Backside Drying Area (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.20) ──
+  Backside_Drying_Area:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Backside_Drying_Area_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+      filters:
+        person:
+          min_area: 300
+          threshold: 0.7
+
+  # ── North Bore (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.21) ──
+  North_Bore:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/North_Bore_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - car
+        - motorcycle
+        - dog
+        - cat
+      filters:
+        person:
+          min_area: 300
+          threshold: 0.7
+
+  # ── North Entrance Top (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.22) ──
+  North_Entrance_Top:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/North_Entrance_Top_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - car
+        - motorcycle
+        - dog
+        - cat
+      filters:
+        person:
+          min_area: 300
+          threshold: 0.7
+
+  # ── Backside Tanks (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.23) ──
+  Backside_Tanks:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Backside_Tanks_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+      filters:
+        person:
+          min_area: 300
+          threshold: 0.7
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  #  INDOOR CAMERAS
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # ── Living Room (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.13) ──
+  Living_Room:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Living_Room_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+
+  # ── Dining Area (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.14) ──
+  Dining_Area:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Dining_Area_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+
+  # ── Kitchen Sink (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.15) ──
+  Kitchen_Sink:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Kitchen_Sink_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+
+  # ── Kitchen Dining (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.16) ──
+  Kitchen_Dining:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Kitchen_Dining_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+
+  # ── Gallery (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.17) ──
+  Gallery:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Gallery_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+
+  # ── Study (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.24) ──
+  Study:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Study_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+
+  # ── Utility (CP-UNC-DB21L3C-MDS-V2 — 10.100.40.25) ──
+  Utility:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/Utility_Sub
+          input_args: preset-rtsp-restream
+          roles:
+            - detect
+    detect:
+      enabled: true
+      width: 704
+      height: 576
+      fps: 5
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+
+version: 0.16-0
