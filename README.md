@@ -16,7 +16,7 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/satvikknischal/Docker-Property-Automation-v1.git
-   cd docker-property-automation
+   cd Docker-Property-Automation-v1
    ```
 
 2. **Run the setup script (first time):**
