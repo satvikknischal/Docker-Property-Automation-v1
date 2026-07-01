@@ -64,6 +64,7 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 │   ├── Prowlarr/             # Indexer manager
 │   ├── Radarr/               # Movies
 │   ├── Sonarr/               # TV Shows
+│   ├── Bazarr/               # Subtitles
 │   ├── Seerr/                # Request management
 │   └── Byparr/               # Captcha/Cloudflare bypass
 ├── qBittorrent/              # Torrent client
@@ -116,6 +117,7 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 | **Prowlarr** | 9696 | Indexer manager for *arr apps |
 | **Radarr** | 7878 | Movie collection manager |
 | **Sonarr** | 8989 | TV series collection manager |
+| **Bazarr** | 6767 | Subtitle management for Radarr/Sonarr |
 | **Seerr** | 5055 | Media request management |
 | **Byparr** | 8191 | Captcha/Cloudflare bypass for indexers |
 | **qBittorrent** | 8080 | Torrent download client |
@@ -302,6 +304,7 @@ sudo lsof -i :PORT
 | Plex | https://support.plex.tv/ |
 | Frigate | https://docs.frigate.video/ |
 | *arr Apps | https://wiki.servarr.com/ |
+| Bazarr | https://wiki.bazarr.media/ |
 | Seerr | https://github.com/seerr-team/seerr |
 | Byparr | https://github.com/ThePhaseless/Byparr |
 | n8n | https://docs.n8n.io/ |

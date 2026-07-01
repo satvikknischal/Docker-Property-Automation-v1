@@ -1,0 +1,43 @@
+#
+# Bazarr - Subtitle Management
+# Documentation: https://wiki.bazarr.media/
+#
+# Downloads and manages subtitles for movies (Radarr) and TV series (Sonarr)
+# Point it at the same media libraries as Radarr/Sonarr so path mappings match
+#
+
+services:
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:${BAZARR_VERSION}
+    container_name: bazarr
+    restart: unless-stopped
+    env_file:
+      - ../../.env
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      # Application config and database
+      - ./config:/config
+      # Movie library (must match Radarr's movie path)
+      - ${ARR_MOVIES_PATH}:/movies
+      # TV series library (must match Sonarr's TV path)
+      - ${ARR_TV_PATH}:/tv
+    expose:
+      - "6767" # Web UI (proxied via Nginx)
+    networks:
+      - proxy-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6767/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=bazarr"
+      - "com.docker.compose.service=bazarr"
+
+networks:
+  proxy-network:
+    external: true

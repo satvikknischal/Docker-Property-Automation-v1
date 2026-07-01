@@ -263,7 +263,7 @@ display_app_menu() {
     echo -e "${YELLOW}Media & Entertainment:${NC}"
     echo "  6) Plex                   - Media streaming server"
     echo "  7) Frigate                - AI-powered NVR"
-    echo "  8) Arr-Stack              - Prowlarr, Radarr, Sonarr, Seerr, Byparr"
+    echo "  8) Arr-Stack              - Prowlarr, Radarr, Sonarr, Bazarr, Seerr, Byparr"
     echo "  9) qBittorrent            - Torrent client"
     echo " 10) SABnzbd                - Usenet client"
     echo ""
@@ -334,6 +334,9 @@ prepare_service_dirs() {
             mkdir -p "$SCRIPT_DIR/$app_dir/config"
             ;;
         "Arr-Stack/Sonarr")
+            mkdir -p "$SCRIPT_DIR/$app_dir/config"
+            ;;
+        "Arr-Stack/Bazarr")
             mkdir -p "$SCRIPT_DIR/$app_dir/config"
             ;;
         "Arr-Stack/Seerr")
@@ -455,6 +458,7 @@ process_selection() {
             install_app "Arr-Stack/Prowlarr" "Prowlarr"
             install_app "Arr-Stack/Radarr" "Radarr"
             install_app "Arr-Stack/Sonarr" "Sonarr"
+            install_app "Arr-Stack/Bazarr" "Bazarr"
             install_app "Arr-Stack/Seerr" "Seerr"
             install_app "Arr-Stack/Byparr" "Byparr"
             ;;
