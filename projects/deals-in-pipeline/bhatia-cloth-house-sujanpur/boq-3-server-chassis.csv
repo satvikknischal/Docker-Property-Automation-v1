@@ -1,0 +1,3 @@
+Sr No,Server Target,Item Description,Brand,Model Number,Specification / Notes,Unit,Qty,Phase,Unit Price (INR),Line Total (INR),GST %,Warranty,Vendor Remarks
+1,Frigate Node,ATX Mid-Tower Chassis with 4x 3.5in bays,Cooler Master,MasterBox NR600 (MCB-NR600-KG5N-S00),"Minimum 4x 3.5in HDD bays required + 2x 2.5in + front mesh + ATX support — Alt: Antec DP503 / Corsair 4000D Airflow with HDD cage add-on",pcs,2,Phase 1 & 2,,,,,
+2,NAS,Micro-ATX NAS Chassis with 8+ 3.5in bays,Fractal Design,Node 804 (FD-CA-NODE-804-BL-W),"Minimum 8x 3.5in bay capacity Micro-ATX form factor — Alt: Silverstone CS381 (rare in IN) / Jonsbo N2 acceptable if 5x bays sufficient",pcs,1,Phase 3,,,,,

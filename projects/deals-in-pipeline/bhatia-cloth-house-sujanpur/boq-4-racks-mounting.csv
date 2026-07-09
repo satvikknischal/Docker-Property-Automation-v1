@@ -1,0 +1,10 @@
+Sr No,Item Description,Brand,Model Number,Specification / Notes,Unit,Qty,Phase,Unit Price (INR),Line Total (INR),GST %,Warranty,Vendor Remarks
+1,22U Wall Mount Rack 600x600mm with glass door,Netrack / Commrax / Valrack,22U 600x600 wall mount glass door,"For HQ / main server closet — houses router core switch access switch services box 2x Frigate nodes NAS PDU cable managers and blanks; includes lockable glass door + side panels",pcs,1,Phase 1,,,,,
+2,12U Wall Mount Rack 600x450mm with glass door,Netrack / Commrax / Valrack,12U 600x450 wall mount,"For IDF closets — camera aggregation zones; 3 units for 3 IDF locations across store",pcs,3,Phase 1 & 2,,,,,
+3,Rack Cooling Fan Tray 4-fan 1U,Netrack / Commrax,4-fan roof-mount tray 1U with thermostat,"For HQ and IDF racks — 1 per rack",pcs,4,Phase 1 & 2,,,,,
+4,Rack PDU 6-way 15A Metal with Surge Protection,APC / Vertiv / Legrand,6-way basic PDU 15A metal body,"Basic PDU 1 per rack — powered from solar hybrid inverter output",pcs,4,Phase 1 & 2,,,,,
+5,Rack Cantilever Shelf 1U 300mm,Netrack / Commrax,1U cantilever fixed shelf 300mm depth,"For mid-tower servers placed in rack (services box Frigate nodes NAS)",pcs,4,Phase 1 & 2,,,,,
+6,Blanking Panel 1U,Netrack / Commrax,1U toolless blanking panel,"For unused rack slots — improves airflow and cable hygiene",pcs,10,Phase 1 & 2,,,,,
+7,Cable Manager 1U Horizontal,Netrack / Commrax,1U horizontal cable manager plastic finger,"Between switches for patch cord organization",pcs,8,Phase 1 & 2,,,,,
+8,Cage Nuts and Screws Kit,Generic,M6 cage nut + screw + washer pack,"100-pcs pack for mounting all rack equipment",pack,2,Phase 1 & 2,,,,,
+9,Rack Grounding Kit,Generic,Copper grounding braid + lug,"Earth bonding for each rack",pcs,4,Phase 1 & 2,,,,,
