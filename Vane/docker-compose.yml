@@ -1,0 +1,38 @@
+#
+# Vane - AI-Powered Search Engine
+# Formerly Perplexica — same author (itzcrazykns), renamed in 2026.
+# https://github.com/ItzCrazyKns/Vane
+#
+services:
+  vane:
+    image: itzcrazykns1337/vane:${VANE_VERSION}
+    container_name: vane
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      - SEARXNG_API_URL=${VANE_SEARXNG_URL}
+      - OPENAI_API_KEY=${VANE_OPENAI_API_KEY}
+      - OLLAMA_API_URL=${VANE_OLLAMA_URL}
+    volumes:
+      - ./data:/home/vane/data
+      - ./config.toml:/home/vane/config.toml
+    expose:
+      - "3000" # Web UI (proxied via Nginx)
+    networks:
+      - proxy-network
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.docker.compose.project=vane"
+      - "com.docker.compose.service=vane"
+
+networks:
+  proxy-network:
+    external: true

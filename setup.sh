@@ -270,7 +270,7 @@ display_app_menu() {
     echo -e "${YELLOW}AI & LLM:${NC}"
     echo " 11) Open WebUI             - LLM chat interface"
     echo " 12) LiteLLM                - LLM API proxy"
-    echo " 13) Perplexica             - AI search engine"
+    echo " 13) Vane                   - AI search engine"
     echo " 14) SearXNG                - Privacy search"
     echo " 15) Whisper STT            - Speech-to-text"
     echo " 16) Piper TTS              - Text-to-speech"
@@ -355,7 +355,7 @@ prepare_service_dirs() {
             mkdir -p "$SCRIPT_DIR/$app_dir/data"
             mkdir -p "$SCRIPT_DIR/$app_dir/postgres-data"
             ;;
-        "Perplexica")
+        "Vane")
             mkdir -p "$SCRIPT_DIR/$app_dir/data"
             ;;
         "SearXNG")
@@ -466,7 +466,7 @@ process_selection() {
         10) install_app "SabNZBd" "SABnzbd" ;;
         11) install_app "OpenWebUI" "Open WebUI" ;;
         12) install_app "LiteLLM" "LiteLLM" ;;
-        13) install_app "Perplexica" "Perplexica" ;;
+        13) install_app "Vane" "Vane" ;;
         14) install_app "SearXNG" "SearXNG" ;;
         15) install_app "Whisper-STT" "Whisper STT" ;;
         16) install_app "Piper-TTS" "Piper TTS" ;;

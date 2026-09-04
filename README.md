@@ -77,7 +77,7 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 │
 ├── OpenWebUI/                # LLM chat interface
 ├── LiteLLM/                  # LLM API proxy
-├── Perplexica/               # AI search engine
+├── Vane/                     # AI search engine (formerly Perplexica)
 ├── SearXNG/                  # Privacy search
 │
 ├── n8n/                      # Workflow automation
@@ -128,7 +128,7 @@ A comprehensive Docker Compose setup for deploying self-hosted services on Ubunt
 |---------|------|-------------|
 | **Open WebUI** | 8080 | Chat interface for LLMs |
 | **LiteLLM** | 4000 | LLM API proxy (OpenAI, Claude, etc.) |
-| **Perplexica** | 3000 | AI-powered search engine |
+| **Vane** | 3000 | AI-powered search engine (formerly Perplexica) |
 | **Whisper STT** | 10300 | Speech-to-text (Wyoming) |
 | **Piper TTS** | 10200 | Text-to-speech (Wyoming) |
 
@@ -310,7 +310,7 @@ sudo lsof -i :PORT
 | n8n | https://docs.n8n.io/ |
 | LiteLLM | https://docs.litellm.ai/ |
 | SearXNG | https://docs.searxng.org/ |
-| Perplexica | https://github.com/ItzCrazyKns/Perplexica |
+| Vane | https://github.com/ItzCrazyKns/Vane |
 | Tandoor | https://docs.tandoor.dev/ |
 | Homebridge | https://homebridge.io/ |
 | Homarr | https://homarr.dev/docs/ |

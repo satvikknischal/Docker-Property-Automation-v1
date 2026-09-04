@@ -39,15 +39,22 @@ services:
       TS_HOSTNAME: ${TS_HOSTNAME}
       # Persist state so the node identity survives container restarts
       TS_STATE_DIR: /var/lib/tailscale
-      # Extra args passed to 'tailscale set' on startup
-      # --advertise-exit-node: allows routing ALL traffic through this server
-      # --advertise-routes: expose local subnets to the tailnet
-      # --accept-dns: use MagicDNS from the tailnet
+      # These are NATIVE containerboot variables: the entrypoint turns TS_ROUTES
+      # into --advertise-routes and TS_ACCEPT_DNS into --accept-dns on its own.
+      # They arrive via env_file too, but are listed here to make the contract
+      # explicit. DO NOT also put --advertise-routes / --accept-dns in
+      # TS_EXTRA_ARGS — passing a flag twice makes `tailscale up` exit 2 and the
+      # container crash-loops ("flag provided multiple times").
+      TS_ROUTES: ${TS_ROUTES}
+      TS_ACCEPT_DNS: ${TS_ACCEPT_DNS}
+      # Kernel networking (not userspace) — required for the node to work as a
+      # real subnet router / exit node. Needs /dev/net/tun + NET_ADMIN (below).
+      TS_USERSPACE: "false"
+      # TS_EXTRA_ARGS = only flags with NO native env equivalent:
+      # --advertise-exit-node: offer to route ALL tailnet traffic through this server
       # --accept-routes: accept routes advertised by other tailnet nodes
       TS_EXTRA_ARGS: >-
         --advertise-exit-node
-        --advertise-routes=${TS_ROUTES}
-        --accept-dns=${TS_ACCEPT_DNS}
         --accept-routes
       TZ: ${TZ}
     volumes:
