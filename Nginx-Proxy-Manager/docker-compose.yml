@@ -3,8 +3,12 @@ services:
     image: docker.io/jc21/nginx-proxy-manager:${NPM_VERSION}
     container_name: nginx-proxy-manager
     restart: unless-stopped
-    env_file:
-      - ../.env
+    # Deliberately NOT `env_file: ../.env` — this image honors PUID/PGID (unlike
+    # most non-linuxserver images), and the shared .env sets those for the media
+    # services. If NPM inherits them it drops to a non-root user and can't write
+    # ./data/logs (which Docker creates as root on first run) — nginx then fails
+    # with "user directive ... ignored" + "fallback_error.log ... Permission
+    # denied" and crash-loops. NPM only ever needed TZ, which is explicit below.
     environment:
       - TZ=${TZ}
        #TZ might not be needed, remove it if it causes issues
